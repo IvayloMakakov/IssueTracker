@@ -1,0 +1,82 @@
+/* Базови настройки (еквивалент на Tailwind Reset) */
+:root {
+    --bg: #ffffff;
+    --text-main: #0f172a;
+    --text-muted: #64748b;
+    --border: #e2e8f0;
+    --primary: #0f172a;
+    --primary-fg: #f8fafc;
+    --secondary: #f1f5f9;
+    --danger: #ef4444;
+    --ring: #94a3b8;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background-color: var(--bg); color: var(--text-main); line-height: 1.5; }
+
+/* Основен контейнер (max-w-5xl mx-auto p-6) */
+.container { max-width: 1024px; margin: 0 auto; padding: 24px; }
+
+/* Grid Лейаут (grid-cols-3 gap-6) */
+.layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 24px; }
+@media (max-width: 1024px) { .layout-grid { grid-template-columns: 1fr; } }
+
+/* Типография */
+h1 { font-size: 24px; font-weight: 600; letter-spacing: -0.02em; }
+h3 { font-size: 18px; font-weight: 600; margin-bottom: 16px; }
+.ticket-id { font-size: 14px; color: var(--text-muted); }
+
+/* Лява част - Header */
+.title-row { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.icon-alert { background: #f1f5f9; color: var(--text-muted); width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: bold; font-size: 14px; margin-top: 4px; }
+.title-flex { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+
+/* Баджове */
+.badges { display: flex; gap: 8px; margin-bottom: 16px; }
+.badge { background: var(--secondary); color: var(--text-main); padding: 2px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; border: 1px solid transparent; }
+.badge-status { border: 1px solid var(--border); padding: 6px 12px; border-radius: 6px; font-size: 14px; display: inline-flex; align-items: center; justify-content: space-between; width: 100%; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+
+/* Описание */
+.description { color: var(--text-muted); margin-bottom: 24px; }
+
+/* Разделител */
+.divider { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
+
+/* Коментари */
+.comment-card, .comment-box { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.comment-header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.avatar { background: var(--primary); color: var(--primary-fg); width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 500; }
+.avatar.small { width: 24px; height: 24px; font-size: 12px; }
+.author { font-size: 14px; font-weight: 500; }
+.date { font-size: 12px; color: var(--text-muted); }
+.comment-text { font-size: 14px; }
+
+/* Полета и Форми */
+textarea { width: 100%; min-height: 64px; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-family: inherit; font-size: 14px; resize: none; outline: none; }
+textarea:focus { border-color: var(--ring); box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.2); }
+select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; background: white; }
+.hidden { display: none !important; }
+
+/* Дясна част - Детайли */
+.details-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.field label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.meta-field { display: flex; flex-direction: column; gap: 4px; }
+.meta-label { font-size: 14px; font-weight: 500; }
+.meta-value { font-size: 14px; color: var(--text-muted); }
+.meta-user { display: flex; align-items: center; gap: 8px; font-size: 14px; }
+
+/* Бутони */
+.btn { display: inline-flex; justify-content: center; gap: 8px; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s; border: none; }
+.btn-primary { background: var(--primary); color: var(--primary-fg); }
+.btn-primary:hover { opacity: 0.9; }
+.btn-ghost { background: transparent; color: var(--text-main); }
+.btn-ghost:hover { background: var(--secondary); }
+.btn-danger { background: var(--danger); color: white; border-radius: 6px; }
+.btn-danger:hover { opacity: 0.9; }
+.w-full { width: 100%; margin-top: 16px; }
+.mt-2 { margin-top: 8px; }
+.mb-4 { margin-bottom: 16px; }
+
+/* Click-to-Edit ефект */
+.editable { cursor: pointer; padding: 4px; margin: -4px; border-radius: 4px; transition: background 0.2s; }
+.editable:hover { background: var(--secondary); }

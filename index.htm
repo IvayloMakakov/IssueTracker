@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+    <meta charset="UTF-8">
+    <title>Билет - Issue Tracker</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <button class="btn btn-ghost mb-4">← Back</button>
+
+        <div class="layout-grid">
+            <div class="main-content">
+                <div class="header-section">
+                    <div class="title-row">
+                        <span class="icon-alert">!</span>
+                        <div>
+                            <div class="title-flex">
+                                <h1 id="ticket-title" class="editable" title="Кликни за редакция">Fix login page responsiveness</h1>
+                            </div>
+                            <p class="ticket-id" id="display-id">ISS-1</p>
+                        </div>
+                    </div>
+                    
+                    <div class="badges">
+                        <span class="badge">frontend</span>
+                        <span class="badge">mobile</span>
+                    </div>
+
+                    <div class="description">
+                        <p id="ticket-desc">The login page is not displaying correctly on mobile devices. Need to add responsive styles.</p>
+                    </div>
+                </div>
+
+                <hr class="divider">
+
+                <div class="comments-section">
+                    <h3>Comments</h3>
+                    
+                    <div class="comment-card">
+                        <div class="comment-header">
+                            <div class="avatar">B</div>
+                            <div>
+                                <p class="author">Bob Smith</p>
+                                <p class="date">28.03.2026 г., 02:00:00 ч.</p>
+                            </div>
+                        </div>
+                        <p class="comment-text">This is affecting user experience on mobile.</p>
+                    </div>
+
+                    <div class="comment-box">
+                        <textarea placeholder="Add a comment..." rows="3"></textarea>
+                        <button class="btn btn-primary mt-2">Add Comment</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="details-card">
+                    <div class="field">
+                        <label>Status</label>
+                        <span id="status-badge" class="badge-status editable">In Progress</span>
+                        <select id="status-select" class="hidden"></select>
+                    </div>
+
+                    <div class="field">
+                        <label>Priority</label>
+                        <span id="priority-badge" class="editable">High</span>
+                        <select id="priority-select" class="hidden"></select>
+                    </div>
+
+                    <div class="field">
+                        <label>Assignee</label>
+                        <span id="assignee-badge" class="editable">Alice Johnson</span>
+                        <select id="assignee-select" class="hidden"></select>
+                    </div>
+
+                    <hr class="divider">
+
+                    <div class="meta-field">
+                        <p class="meta-label">Reporter</p>
+                        <div class="meta-user">
+                            <div class="avatar small">B</div>
+                            <span>Bob Smith</span>
+                        </div>
+                    </div>
+
+                    <div class="meta-field">
+                        <p class="meta-label">Created</p>
+                        <p class="meta-value">25.03.2026 г.</p>
+                    </div>
+
+                    <div class="meta-field">
+                        <p class="meta-label">Updated</p>
+                        <p class="meta-value">30.03.2026 г.</p>
+                    </div>
+                </div>
+
+                <button class="btn btn-danger w-full mt-4">🗑 Delete Issue</button>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

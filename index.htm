@@ -7,19 +7,44 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div class="container">
-        <button class="btn btn-ghost mb-4">← Back</button>
+    <!-- Горна лента (Navbar) -->
+    <header class="top-nav">
+        <div class="logo"><strong>IT</strong> Issue Tracker</div>
+        <div class="search-bar">🔍 Search issues by ID, title, or keywords...</div>
+        <div class="nav-actions">
+            <button class="btn-dark">+ New Issue</button>
+            <div class="avatar">AJ</div>
+        </div>
+    </header>
 
-        <div class="layout-grid">
-            <div class="main-content">
-                <div class="header-section">
+    <div class="app-container">
+        <!-- Ляво меню (Sidebar) -->
+        <aside class="sidebar-nav">
+            <div class="nav-group">
+                <h4>Navigation</h4>
+                <p>Quick access</p>
+            </div>
+            <ul class="nav-links">
+                <li><span class="icon">🏠</span> Dashboard</li>
+                <li><span class="icon">📄</span> All Issues</li>
+                <li><span class="icon">⊞</span> Board View</li>
+                <li class="active"><span class="icon">👥</span> Teams</li>
+                <li><span class="icon">📊</span> Reports</li>
+            </ul>
+        </aside>
+
+        <!-- Основно съдържание -->
+        <main class="main-content" id="ticket-view">
+            <button class="btn-back">← Back</button>
+
+            <div class="layout-grid">
+                <!-- ЛЯВА ЧАСТ: Описание и Коментари -->
+                <div class="content-left">
                     <div class="title-row">
-                        <span class="icon-alert">!</span>
+                        <div class="icon-alert">!</div>
                         <div>
-                            <div class="title-flex">
-                                <h1 id="ticket-title" class="editable" title="Кликни за редакция">Fix login page responsiveness</h1>
-                            </div>
-                            <p class="ticket-id" id="display-id">ISS-1</p>
+                            <h1 id="ticket-title" class="editable" title="Кликни за редакция">Fix login page responsiveness</h1>
+                            <p class="ticket-id">ISS-1</p>
                         </div>
                     </div>
                     
@@ -28,79 +53,102 @@
                         <span class="badge">mobile</span>
                     </div>
 
-                    <div class="description">
-                        <p id="ticket-desc">The login page is not displaying correctly on mobile devices. Need to add responsive styles.</p>
-                    </div>
-                </div>
-
-                <hr class="divider">
-
-                <div class="comments-section">
-                    <h3>Comments</h3>
-                    
-                    <div class="comment-card">
-                        <div class="comment-header">
-                            <div class="avatar">B</div>
-                            <div>
-                                <p class="author">Bob Smith</p>
-                                <p class="date">28.03.2026 г., 02:00:00 ч.</p>
-                            </div>
-                        </div>
-                        <p class="comment-text">This is affecting user experience on mobile.</p>
-                    </div>
-
-                    <div class="comment-box">
-                        <textarea placeholder="Add a comment..." rows="3"></textarea>
-                        <button class="btn btn-primary mt-2">Add Comment</button>
-                    </div>
-                </div>
-            </div>
-
-            <div class="sidebar">
-                <div class="details-card">
-                    <div class="field">
-                        <label>Status</label>
-                        <span id="status-badge" class="badge-status editable">In Progress</span>
-                        <select id="status-select" class="hidden"></select>
-                    </div>
-
-                    <div class="field">
-                        <label>Priority</label>
-                        <span id="priority-badge" class="editable">High</span>
-                        <select id="priority-select" class="hidden"></select>
-                    </div>
-
-                    <div class="field">
-                        <label>Assignee</label>
-                        <span id="assignee-badge" class="editable">Alice Johnson</span>
-                        <select id="assignee-select" class="hidden"></select>
-                    </div>
-
+                    <p class="description-text">The login page is not displaying correctly on mobile devices. Need to add responsive styles.</p>
                     <hr class="divider">
 
-                    <div class="meta-field">
-                        <p class="meta-label">Reporter</p>
-                        <div class="meta-user">
-                            <div class="avatar small">B</div>
-                            <span>Bob Smith</span>
+                    <!-- СЕКЦИЯ КОМЕНТАРИ -->
+                    <div class="comments-section">
+                        <h3>Comments</h3>
+                        <div id="comments-list">
+                            <div class="comment-card">
+                                <div class="comment-header">
+                                    <div class="avatar-small black">B</div>
+                                    <div>
+                                        <p class="author">Bob Smith</p>
+                                        <p class="date">28.03.2026 г., 02:00:00 ч.</p>
+                                    </div>
+                                </div>
+                                <p class="comment-body">This is affecting user experience on mobile.</p>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="meta-field">
-                        <p class="meta-label">Created</p>
-                        <p class="meta-value">25.03.2026 г.</p>
-                    </div>
-
-                    <div class="meta-field">
-                        <p class="meta-label">Updated</p>
-                        <p class="meta-value">30.03.2026 г.</p>
+                        <!-- ПОЛЕ ЗА НОВ КОМЕНТАР -->
+                        <div class="add-comment-box">
+                            <textarea id="new-comment-text" placeholder="Add a comment..." rows="3"></textarea>
+                            <button id="add-comment-btn" class="btn-primary mt-2">Add Comment</button>
+                        </div>
                     </div>
                 </div>
 
-                <button class="btn btn-danger w-full mt-4">🗑 Delete Issue</button>
+                <!-- ДЯСНА ЧАСТ: Детайли -->
+                <div class="content-right">
+                    <div class="details-card">
+                        
+                        <!-- CUSTOM DROPDOWN: Status -->
+                        <div class="field">
+                            <label>Status</label>
+                            <div class="custom-dropdown" id="dropdown-status">
+                                <button class="dropdown-trigger" id="trigger-status">
+                                    <span id="value-status">In Progress</span>
+                                    <span class="chevron">▼</span>
+                                </button>
+                                <div class="dropdown-menu hidden" id="menu-status"></div>
+                            </div>
+                        </div>
+
+                        <!-- CUSTOM DROPDOWN: Priority -->
+                        <div class="field">
+                            <label>Priority</label>
+                            <div class="custom-dropdown" id="dropdown-priority">
+                                <button class="dropdown-trigger" id="trigger-priority">
+                                    <span id="value-priority" class="flex-align"><span class="text-orange">↑</span> High</span>
+                                    <span class="chevron">▼</span>
+                                </button>
+                                <div class="dropdown-menu hidden" id="menu-priority"></div>
+                            </div>
+                        </div>
+
+                        <!-- CUSTOM DROPDOWN: Assignee -->
+                        <div class="field">
+                            <label>Assignee</label>
+                            <div class="custom-dropdown" id="dropdown-assignee">
+                                <button class="dropdown-trigger" id="trigger-assignee">
+                                    <span id="value-assignee">Alice Johnson</span>
+                                    <span class="chevron">▼</span>
+                                </button>
+                                <div class="dropdown-menu hidden" id="menu-assignee"></div>
+                            </div>
+                        </div>
+
+                        <hr class="divider">
+
+                        <!-- Мета данни -->
+                        <div class="meta-field">
+                            <p class="meta-label">Reporter</p>
+                            <div class="flex-align"><div class="avatar-small black">B</div> Bob Smith</div>
+                        </div>
+                        <div class="meta-field mt-3">
+                            <p class="meta-label">Created</p>
+                            <p class="meta-text">25.03.2026 г.</p>
+                        </div>
+                        <div class="meta-field mt-3">
+                            <p class="meta-label">Updated</p>
+                            <p class="meta-text">30.03.2026 г.</p>
+                        </div>
+                    </div>
+                    
+                    <button id="delete-btn" class="btn-danger w-full mt-4">🗑 Delete Issue</button>
+                </div>
             </div>
+        </main>
+        
+        <!-- Съобщение при изтриване -->
+        <div id="deleted-message" class="hidden" style="padding: 40px; text-align: center;">
+            <h2>Билетът беше изтрит!</h2>
+            <button onclick="location.reload()" class="btn-primary mt-4">Върни го (Рефреш)</button>
         </div>
     </div>
+    
     <script src="script.js"></script>
 </body>
 </html>

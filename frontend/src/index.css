@@ -12,7 +12,6 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-dark); overflow-x: hidden;}
 
-/* Layout */
 .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 12px 24px; border-bottom: 1px solid var(--border); }
 .search-bar { background: var(--bg-page); padding: 8px 16px; border-radius: 6px; color: var(--text-muted); width: 400px; }
 .nav-actions { display: flex; align-items: center; gap: 16px; }
@@ -27,7 +26,6 @@ body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color
 .main-content { flex: 1; padding: 32px 48px; background-color: var(--bg-main); max-width: 1200px; }
 .layout-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 40px; margin-top: 24px;}
 
-/* Typography & Elements */
 h1 { font-size: 24px; margin-bottom: 4px; }
 .ticket-id { color: var(--text-muted); font-size: 14px; }
 .title-row { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 16px; }
@@ -39,7 +37,6 @@ h1 { font-size: 24px; margin-bottom: 4px; }
 .description-text { color: var(--text-muted); line-height: 1.6; }
 .divider { border: 0; border-top: 1px solid var(--border); margin: 24px 0; }
 
-/* Comments */
 .comments-section h3 { font-size: 18px; margin-bottom: 16px; }
 .comment-card { border: 1px solid var(--border); border-radius: 8px; padding: 16px; margin-bottom: 16px; }
 .comment-header { display: flex; gap: 12px; align-items: center; margin-bottom: 8px; }
@@ -53,13 +50,11 @@ h1 { font-size: 24px; margin-bottom: 4px; }
 textarea { width: 100%; border: none; background: var(--bg-page); padding: 12px; border-radius: 6px; resize: vertical; min-height: 80px; font-family: inherit; outline: none; }
 textarea:focus { box-shadow: 0 0 0 2px var(--border); }
 
-/* Right Sidebar Details */
 .details-card { border: 1px solid var(--border); border-radius: 8px; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
 .field label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 8px; }
 .meta-label { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
 .meta-text { font-size: 13px; color: var(--text-muted); }
 
-/* CUSTOM DROPDOWNS (The Magic) */
 .custom-dropdown { position: relative; width: 100%; }
 .dropdown-trigger { width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; background: var(--bg-page); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-family: inherit; font-size: 14px; transition: 0.2s; }
 .dropdown-trigger:hover { background: #e2e8f0; }
@@ -69,7 +64,6 @@ textarea:focus { box-shadow: 0 0 0 2px var(--border); }
 .dropdown-item.selected { background: var(--hover-bg); font-weight: 500; }
 .check-icon { color: var(--text-dark); font-weight: bold; }
 
-/* Utilities & Buttons */
 .hidden { display: none !important; }
 .flex-align { display: flex; align-items: center; gap: 8px; }
 .text-orange { color: #f97316; font-weight: bold; }

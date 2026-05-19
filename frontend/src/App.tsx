@@ -8,7 +8,6 @@ import { IssueTable } from './components/IssueTable';
 import { NewIssueModal } from './components/NewIssueModal';
 
 function App() {
-  // Инициализираме състоянията като празни масиви – данните ще дойдат от сървъра
   const [issues, setIssues] = useState<Issue[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   
@@ -25,12 +24,12 @@ function App() {
   const CURRENT_USER = 'Alice Johnson';
 
   useEffect(() => {
-    fetch('http://localhost:5000/api/issues')
+    fetch('/api/issues')
       .then(res => res.json())
       .then(data => setIssues(data))
       .catch(err => console.error("Грешка при зареждане на задачите:", err));
 
-    fetch('http://localhost:5000/api/notifications')
+    fetch('/api/notifications')
       .then(res => res.json())
       .then(data => setNotifications(data))
       .catch(err => console.error("Грешка при зареждане на известията:", err));
@@ -41,11 +40,10 @@ function App() {
     if (!targetIssue) return;
 
     const nextFavoriteState = !targetIssue.isFavorite;
-
     setIssues(prev => prev.map(i => i.id === id ? { ...i, isFavorite: nextFavoriteState } : i));
 
     try {
-      await fetch(`http://localhost:5000/api/issues/${id}`, {
+      await fetch(`/api/issues/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ isFavorite: nextFavoriteState })
@@ -66,7 +64,7 @@ function App() {
     const payload = { title, type, priority, status, assigneeName };
 
     try {
-      const response = await fetch('http://localhost:5000/api/issues', {
+      const response = await fetch('/api/issues', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -79,18 +77,18 @@ function App() {
     }
   };
 
-  const handleNotificationsChange = (update: React.SetStateAction<Notification[]>) => {
+  const handleNotificationsChange = async (update: React.SetStateAction<Notification[]>) => {
     const nextNotifs = typeof update === 'function' ? update(notifications) : update;
 
-    if (nextNotifs.length < notifications.length) {
-      const deletedItem = notifications.find(n => !nextNotifs.some(next => next.id === n.id));
-      if (deletedItem) {
-        fetch(`http://localhost:5000/api/notifications/${deletedItem.id}`, { method: 'DELETE' })
-          .catch(err => console.error("Грешка при триене на известие:", err));
+    if (nextNotifs.every(n => !n.unread) && notifications.some(n => n.unread)) {
+      try {
+        const response = await fetch('/api/notifications/read-all', { method: 'PATCH' });
+        const updatedNotifsFromServer = await response.json();
+        setNotifications(updatedNotifsFromServer);
+        return;
+      } catch (err) {
+        console.error("Грешка при маркиране на всички:", err);
       }
-    } else if (nextNotifs.every(n => !n.unread) && notifications.some(n => n.unread)) {
-      fetch('http://localhost:5000/api/notifications/read-all', { method: 'PATCH' })
-        .catch(err => console.error("Грешка при маркиране на всички:", err));
     }
 
     setNotifications(nextNotifs);
@@ -119,7 +117,7 @@ function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white text-slate-900 font-sans antialiased overflow-hidden">
+    <div className="app-container">
       <Header 
         issues={issues} 
         notifications={notifications} 
@@ -128,13 +126,20 @@ function App() {
         onOpenModal={() => setIsModalOpen(true)}
       />
       
-      <div className="flex flex-1 overflow-hidden relative z-10">
+      <div className="main-layout">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         
-        <main className="flex-1 flex flex-col min-w-0 bg-white p-8 overflow-y-auto">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Issues List</h1>
-            <p className="text-sm text-gray-500 mt-1">View and filter live issues connected to Node.js</p>
+        <main className="content-area">
+          <div className="page-header">
+            <div>
+              <h1 className="page-title">Issues List</h1>
+              <p className="page-subtitle">View and filter live issues connected to Node.js</p>
+            </div>
+            {selectedIssueId && (
+              <button onClick={() => setSelectedIssueId(null)} className="clear-search-btn">
+                Clear Search Filter ✕
+              </button>
+            )}
           </div>
 
           <FiltersBar 

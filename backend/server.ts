@@ -1,13 +1,34 @@
-const express = require('express');
-const cors = require('cors');
+import express, { Request, Response } from 'express';
+import cors from 'cors';
 
 const app = express();
+
 app.use(cors()); // Позволява на фронтенда да прави заявки
 app.use(express.json()); // Позволява на сървъра да чете JSON данни
 
+// --- TYPES / INTERFACES ---
+interface Comment {
+    id: number;
+    author: string;
+    avatar: string;
+    color: string;
+    date: string;
+    text: string;
+}
+
+interface Ticket {
+    id: string;
+    title: string;
+    status: string;
+    priority: string;
+    assignee: string;
+    comments: Comment[];
+    // Позволява ни да достъпваме полетата динамично чрез ticketDB[field]
+    [key: string]: any; 
+}
+
 // --- ИМИТАЦИЯ НА БАЗА ДАННИ ---
-// В реалния проект тук ще ползвате SQLite или MySQL
-let ticketDB = {
+let ticketDB: Ticket = {
     id: "ISS-1",
     title: "Fix login page responsiveness",
     status: "In Progress",
@@ -25,29 +46,29 @@ let ticketDB = {
     ]
 };
 
-// --- API ENDPOINTS (Пътищата на сървъра) ---
+// --- API ENDPOINTS ---
 
 // 1. Вземане на данните за билета
-app.get('/api/ticket', (req, res) => {
+app.get('/api/ticket', (req: Request, res: Response) => {
     res.json(ticketDB);
 });
 
 // 2. Обновяване на поле (status, priority, assignee, title)
-app.patch('/api/ticket', (req, res) => {
-    const { field, value } = req.body;
+app.patch('/api/ticket', (req: Request, res: Response) => {
+    const { field, value } = req.body as { field: string; value: string };
     
     // Проста бекенд валидация
-    if (ticketDB.hasOwnProperty(field)) {
+    if (Object.prototype.hasOwnProperty.call(ticketDB, field) && field !== 'comments' && field !== 'id') {
         ticketDB[field] = value;
         res.json({ success: true, message: "Обновено успешно", data: ticketDB });
     } else {
-        res.status(400).json({ success: false, message: "Невалидно поле" });
+        res.status(400).json({ success: false, message: "Невалидно или незаменяемо поле" });
     }
 });
 
 // 3. Добавяне на нов коментар
-app.post('/api/ticket/comments', (req, res) => {
-    const { text, author } = req.body;
+app.post('/api/ticket/comments', (req: Request, res: Response) => {
+    const { text, author } = req.body as { text: string; author?: string };
     
     if (!text) {
         return res.status(400).json({ success: false, message: "Празен коментар" });
@@ -56,10 +77,10 @@ app.post('/api/ticket/comments', (req, res) => {
     const now = new Date();
     const dateStr = `${now.getDate()}.${(now.getMonth() + 1).toString().padStart(2, '0')}.${now.getFullYear()} г., ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}:${now.getSeconds().toString().padStart(2, '0')} ч.`;
 
-    const newComment = {
-        id: Date.now(), // Генерираме уникално ID
-        author: author || "Alice Johnson", // Хардкоднато за сега, реално се взима от сесията
-        avatar: "A",
+    const newComment: Comment = {
+        id: Date.now(), // Unique ID
+        author: author || "Alice Johnson", 
+        avatar: (author ? author.charAt(0).toUpperCase() : "A"),
         color: "blue",
         date: dateStr,
         text: text
@@ -71,6 +92,9 @@ app.post('/api/ticket/comments', (req, res) => {
 
 // Стартиране на сървъра
 const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Сървърът работи на http://localhost:${PORT}`);
+
+// Използваме '0.0.0.0', за да бъде достъпен от лаптопите на колегите ти в същата Wi-Fi мрежа
+app.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Сървърът работи на порт ${PORT}`);
+    console.log(`Достъпен локално на: http://localhost:${PORT}`);
 });

@@ -1,25 +1,19 @@
 /* frontend/src/MainPage.css */
 
-/* Глобални стилове за база */
-* {
+/* Глобални стилове за база в рамките на компонента */
+.mp-app-container * {
   box-sizing: border-box;
 }
 
-body {
-  margin: 0;
-  padding: 0;
-}
-
-/* Насилно караме всички контроли и бутони да използват шрифта на проекта */
-input, 
-select, 
-button, 
-textarea {
+/* Насилно караме всички контроли и бутони в MainPage да използват шрифта на проекта */
+.mp-app-container input, 
+.mp-app-container select, 
+.mp-app-container button, 
+.mp-app-container textarea {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif !important;
 }
 
-/* В началото на твоя index.css */
-.app-container {
+.mp-app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -32,17 +26,17 @@ textarea {
   overflow: hidden;
 }
 
-.main-layout {
+.mp-main-layout {
   display: flex;
-  flex: 1; /* Това казва: заемай цялото останало вертикално място */
+  flex: 1; 
   width: 100%;
   overflow: hidden;
   position: relative;
 }
 
-.content-area {
-  flex: 1; /* Това казва на съдържанието: заемай цялото останало хоризонтално място */
-  min-width: 0; /* ТОВА Е ТАЙНАТА: Позволява на съдържанието да се свива, когато Sidebar се свие */
+.mp-content-area {
+  flex: 1; 
+  min-width: 0; /* Позволява на съдържанието да се свива, когато Sidebar се свие */
   display: flex;
   flex-direction: column;
   padding: 2rem;
@@ -50,14 +44,14 @@ textarea {
   transition: all 0.3s ease-in-out;
 }
 
-.page-header {
+.mp-page-header {
   margin-bottom: 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.page-title {
+.mp-page-title {
   font-size: 1.5rem;
   font-weight: 700;
   color: #111827;
@@ -65,14 +59,14 @@ textarea {
   text-align: left;
 }
 
-.page-subtitle {
+.mp-page-subtitle {
   font-size: 0.875rem;
   color: #6b7280;
   margin-top: 0.25rem;
   margin-bottom: 0;
 }
 
-.clear-search-btn {
+.mp-clear-search-btn {
   font-size: 0.75rem;
   font-weight: 600;
   padding: 0.375rem 0.75rem;
@@ -84,18 +78,17 @@ textarea {
   transition: background-color 0.2s;
 }
 
-.clear-search-btn:hover {
+.mp-clear-search-btn:hover {
   background-color: #e5e7eb;
 }
 
 /* --- СТИЛОВЕ ЗА FILTERS BAR --- */
-
-.filters-container {
+.mp-filters-container {
   position: relative;
   z-index: 20;
 }
 
-.tabs-wrapper {
+.mp-tabs-wrapper {
   position: relative;
   background-color: #f3f4f6;
   padding: 0.25rem;
@@ -103,11 +96,11 @@ textarea {
   display: inline-flex;
   margin-bottom: 1.5rem;
   width: 100%;
-  max-width: 56rem; /* 4xl */
+  max-width: 56rem; 
   flex-wrap: wrap;
 }
 
-.tab-btn {
+.mp-tab-btn {
   flex: 1;
   font-size: 0.875rem;
   font-weight: 500;
@@ -123,36 +116,36 @@ textarea {
   transition: color 0.3s, background-color 0.3s;
 }
 
-.tab-btn:hover {
+.mp-tab-btn:hover {
   color: #111827;
 }
 
-.tab-btn.active {
+.mp-tab-btn.mp-active {
   background-color: #ffffff;
   color: #111827;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.dropdowns-bar {
+.mp-dropdowns-bar {
   display: flex;
   align-items: center;
-  margin-top: 1rem; /* Оправено отстояние спрямо скрийншота */
+  margin-top: 1rem; 
   margin-bottom: 1rem;
   position: relative;
   z-index: 20;
 }
 
-.dropdowns-group {
+.mp-dropdowns-group {
   display: flex;
   gap: 0.75rem;
   font-size: 0.875rem;
 }
 
-.dropdown-container {
+.mp-dropdown-container {
   position: relative;
 }
 
-.filter-trigger {
+.mp-filter-trigger {
   border: 1px solid #e5e7eb;
   background-color: #ffffff;
   padding: 0.375rem 0.75rem;
@@ -167,22 +160,22 @@ textarea {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.filter-trigger:hover {
+.mp-filter-trigger:hover {
   background-color: #f9fafb;
 }
 
-.chevron-icon {
+.mp-chevron-icon {
   width: 0.75rem;
   height: 0.75rem;
   color: #9ca3af;
   transition: transform 0.2s;
 }
 
-.chevron-icon.rotated {
+.mp-chevron-icon.mp-rotated {
   transform: rotate(180deg);
 }
 
-.dropdown-menu {
+.mp-dropdown-menu {
   position: absolute;
   top: 100%;
   left: 0;
@@ -198,7 +191,7 @@ textarea {
   z-index: 50;
 }
 
-.dropdown-item {
+.mp-dropdown-item {
   width: 100%;
   text-align: left;
   border: none;
@@ -210,15 +203,14 @@ textarea {
   transition: background-color 0.2s, color 0.2s;
 }
 
-.dropdown-item:hover {
+.mp-dropdown-item:hover {
   background-color: #f9fafb;
   color: #2563eb;
 }
 
 /* --- СТИЛОВЕ ЗА GLOBAL HEADER --- */
-
-.global-header {
-  height: 4rem; /* h-16 */
+.mp-global-header {
+  height: 4rem; 
   border-bottom: 1px solid #e5e7eb;
   display: flex;
   align-items: center;
@@ -227,19 +219,19 @@ textarea {
   padding-right: 1.5rem;
   flex-shrink: 0;
   position: relative;
-  z-index: 20;
+  z-index: 49;
   background-color: #ffffff;
 }
 
-.header-logo-section {
+.mp-header-logo-section {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  width: 16rem; /* w-64 */
+  width: 16rem; 
   cursor: pointer;
 }
 
-.logo-badge {
+.mp-logo-badge {
   background-color: #0f172a;
   color: #ffffff;
   font-weight: 700;
@@ -248,27 +240,27 @@ textarea {
   border-radius: 0.25rem;
 }
 
-.logo-text {
+.mp-logo-text {
   font-size: 1.125rem;
   font-weight: 600;
   color: #0f172a;
 }
 
-.search-wrapper {
+.mp-search-wrapper {
   flex: 1;
-  max-width: 42rem; /* max-w-2xl */
+  max-width: 42rem; 
   padding-left: 1rem;
   padding-right: 1rem;
   position: relative;
 }
 
-.search-input-container {
+.mp-search-input-container {
   position: relative;
   display: flex;
   align-items: center;
 }
 
-.search-icon {
+.mp-search-icon {
   width: 1rem;
   height: 1rem;
   position: absolute;
@@ -276,7 +268,7 @@ textarea {
   color: #9ca3af;
 }
 
-.search-input {
+.mp-search-input {
   width: 100%;
   background-color: #f9fafb;
   border: 1px solid #d1d5db;
@@ -290,12 +282,12 @@ textarea {
   outline: none;
 }
 
-.search-input:focus {
+.mp-search-input:focus {
   border-color: #3b82f6;
   background-color: #ffffff;
 }
 
-.search-dropdown {
+.mp-search-dropdown {
   position: absolute;
   top: 100%;
   left: 0;
@@ -307,12 +299,12 @@ textarea {
   border-radius: 0.375rem;
   display: flex;
   flex-direction: column;
-  max-height: 25rem; /* max-h-100 */
+  max-height: 25rem; 
   overflow: hidden;
   z-index: 50;
 }
 
-.search-dropdown-header {
+.mp-search-dropdown-header {
   padding: 0.5rem 1rem;
   border-bottom: 1px solid #f3f4f6;
   font-size: 0.75rem;
@@ -320,19 +312,19 @@ textarea {
   font-weight: 500;
 }
 
-.search-results-list {
+.mp-search-results-list {
   overflow-y: auto;
   padding: 0.5rem;
 }
 
-.search-no-results {
+.mp-search-no-results {
   padding: 1rem;
   font-size: 0.875rem;
   color: #6b7280;
   text-align: center;
 }
 
-.search-result-item {
+.mp-search-result-item {
   display: block;
   padding: 0.75rem;
   border-radius: 0.375rem;
@@ -341,28 +333,28 @@ textarea {
   cursor: pointer;
 }
 
-.search-result-item:last-child {
+.mp-search-result-item:last-child {
   border-bottom: none;
 }
 
-.search-result-item:hover {
+.mp-search-result-item:hover {
   background-color: #f9fafb;
 }
 
-.search-result-meta {
+.mp-search-result-meta {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.25rem;
 }
 
-.search-result-id {
+.mp-search-result-id {
   font-size: 0.75rem;
   font-weight: 500;
   color: #9ca3af;
 }
 
-.search-result-status {
+.mp-search-result-status {
   padding: 0.125rem 0.5rem;
   border-radius: 9999px;
   background-color: #f3f4f6;
@@ -372,19 +364,19 @@ textarea {
   text-transform: lowercase;
 }
 
-.search-result-title {
+.mp-search-result-title {
   font-size: 0.875rem;
   font-weight: 500;
   color: #111827;
 }
 
-.header-actions {
+.mp-header-actions {
   display: flex;
   align-items: center;
   gap: 1rem;
 }
 
-.primary-btn {
+.mp-primary-btn {
   background-color: #0f172a;
   color: #ffffff;
   font-size: 0.875rem;
@@ -399,20 +391,20 @@ textarea {
   transition: background-color 0.2s;
 }
 
-.primary-btn:hover {
+.mp-primary-btn:hover {
   background-color: #1e293b;
 }
 
-.icon-small {
+.mp-icon-small {
   width: 1rem;
   height: 1rem;
 }
 
-.bell-wrapper {
+.mp-bell-wrapper {
   position: relative;
 }
 
-.bell-trigger {
+.mp-bell-trigger {
   position: relative;
   color: #6b7280;
   background: transparent;
@@ -421,16 +413,16 @@ textarea {
   cursor: pointer;
 }
 
-.bell-trigger:hover {
+.mp-bell-trigger:hover {
   color: #374151;
 }
 
-.bell-icon {
+.mp-bell-icon {
   width: 1.5rem;
   height: 1.5rem;
 }
 
-.bell-badge {
+.mp-bell-badge {
   position: absolute;
   top: 0;
   right: 0;
@@ -444,12 +436,12 @@ textarea {
   border: 2px solid #ffffff;
 }
 
-.notifications-dropdown {
+.mp-notifications-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  width: 20rem; /* w-80 */
+  width: 20rem; 
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
@@ -460,7 +452,7 @@ textarea {
   overflow: hidden;
 }
 
-.notif-dropdown-header {
+.mp-notif-dropdown-header {
   padding: 1rem;
   border-bottom: 1px solid #f3f4f6;
   display: flex;
@@ -469,14 +461,14 @@ textarea {
   background-color: #ffffff;
 }
 
-.notif-dropdown-title {
+.mp-notif-dropdown-title {
   font-weight: 600;
   color: #111827;
   font-size: 1rem;
   margin: 0;
 }
 
-.mark-read-btn {
+.mp-mark-read-btn {
   font-size: 0.75rem;
   color: #4b5563;
   background: transparent;
@@ -485,29 +477,29 @@ textarea {
   cursor: pointer;
 }
 
-.mark-read-btn:hover {
+.mp-mark-read-btn:hover {
   color: #111827;
 }
 
-.notifications-list {
-  max-height: 25rem; /* max-h-100 */
+.mp-notifications-list {
+  max-height: 25rem; 
   overflow-y: auto;
   padding: 0.5rem;
   background-color: #ffffff;
 }
 
-.notif-empty-state {
+.mp-notif-empty-state {
   padding: 1.5rem;
   text-align: center;
   font-size: 0.875rem;
   color: #6b7280;
 }
 
-.notif-card {
+.mp-notif-card {
   display: flex;
   gap: 0.75rem;
   padding: 0.75rem;
-  background-color: #f8fafc; /* slate-50 */
+  background-color: #f8fafc; 
   border: 1px solid #f1f5f9;
   border-radius: 0.375rem;
   cursor: pointer;
@@ -515,42 +507,42 @@ textarea {
   position: relative;
 }
 
-.notif-card:hover {
+.mp-notif-card:hover {
   background-color: #f3f4f6;
 }
 
-.notif-icon-container {
+.mp-notif-icon-container {
   margin-top: 0.125rem;
   color: #4b5563;
 }
 
-.notif-content {
+.mp-notif-content {
   flex: 1;
 }
 
-.notif-title {
+.mp-notif-title {
   font-size: 0.875rem;
   font-weight: 600;
   color: #4b5563;
 }
 
-.notif-title.unread {
+.mp-notif-title.mp-unread {
   color: #111827;
 }
 
-.notif-desc {
+.mp-notif-desc {
   font-size: 0.75rem;
   color: #6b7280;
   margin-top: 0.125rem;
 }
 
-.notif-date {
+.mp-notif-date {
   font-size: 10px;
   color: #9ca3af;
   margin-top: 0.25rem;
 }
 
-.notif-unread-dot {
+.mp-notif-unread-dot {
   width: 0.375rem;
   height: 0.375rem;
   background-color: #0f172a;
@@ -560,131 +552,111 @@ textarea {
   top: 1rem;
 }
 
-.user-avatar-btn {
-  background-color: #0f172a;
-  color: #ffffff;
-  font-size: 0.75rem;
-  font-weight: 700;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
-  cursor: pointer;
-}
-
 /* --- СТИЛОВЕ ЗА ISSUE TABLE (FIXED LAYOUT) --- */
-
-.table-border-wrapper {
+.mp-table-border-wrapper {
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
   overflow: hidden;
   background-color: #ffffff;
 }
 
-.issues-table {
+.mp-issues-table {
   width: 100%;
   text-align: left;
   font-size: 0.875rem;
   border-collapse: collapse;
-  table-layout: fixed; /* Гарантира спазването на ширините на колоните */
+  table-layout: fixed; 
 }
 
-.table-head {
-  background-color: #f9fafb; /* bg-gray-50 */
+.mp-table-head {
+  background-color: #f9fafb; 
   border-bottom: 1px solid #e5e7eb;
-  color: #4b5563; /* text-gray-600 */
+  color: #4b5563; 
   font-weight: 500;
 }
 
-.table-head th {
+.mp-table-head th {
   padding: 0.75rem 1rem;
 }
 
-/* Фиксирани ширини за колоните, за да няма застъпване */
-.th-bookmark { width: 3.5rem; text-align: center; }
-.th-id { width: 5.5rem; }
-.th-title { width: auto; } /* Заглавието заема останалото пространство */
-.th-type { width: 8.5rem; }
-.th-status { width: 9rem; }
-.th-priority { width: 8.5rem; }
-.th-assignee { width: 11.5rem; }
-.th-updated { width: 8rem; }
+.mp-th-bookmark { width: 3.5rem; text-align: center; }
+.mp-th-id { width: 5.5rem; }
+.mp-th-title { width: auto; } 
+.mp-th-type { width: 8.5rem; }
+.mp-th-status { width: 9rem; }
+.mp-th-priority { width: 8.5rem; }
+.mp-th-assignee { width: 11.5rem; }
+.mp-th-updated { width: 8rem; }
 
-.table-body {
+.mp-table-body {
   background-color: #ffffff;
 }
 
-.table-body td {
+.mp-table-body td {
   padding: 0.75rem 1rem;
   vertical-align: middle;
 }
 
-.table-row {
+.mp-table-row {
   border-bottom: 1px solid #f3f4f6;
   transition: background-color 0.2s;
 }
 
-.table-row:last-child {
+.mp-table-row:last-child {
   border-bottom: none;
 }
 
-.table-row:hover {
+.mp-table-row:hover {
   background-color: #f9fafb;
 }
 
-.td-center {
+.mp-td-center {
   text-align: center;
 }
 
-.td-id {
+.mp-td-id {
   font-weight: 500;
   color: #111827;
 }
 
-.td-title {
+.mp-td-title {
   color: #111827;
   font-weight: 500;
   white-space: nowrap;
   overflow: hidden;
-  text-overflow: ellipsis; /* Реже дългия текст с три точки (...) */
+  text-overflow: ellipsis; 
 }
 
-/* Помощни флекс класове */
-.inline-flex-center {
+.mp-inline-flex-center {
   display: inline-flex;
   align-items: center;
 }
 
-.flex-center {
+.mp-flex-center {
   display: flex;
   align-items: center;
 }
 
-.gap-1-5 { gap: 0.375rem; }
-.gap-2 { gap: 0.5rem; }
-.font-medium { font-weight: 500; }
-.text-dark-gray { color: #4b5563; }
-.text-slate { color: #0f172a; }
-.text-muted { color: #6b7280; }
+.mp-gap-1-5 { gap: 0.375rem; }
+.mp-gap-2 { gap: 0.5rem; }
+.mp-font-medium { font-weight: 500; }
+.mp-text-dark-gray { color: #4b5563; }
+.mp-text-slate { color: #0f172a; }
+.mp-text-muted { color: #6b7280; }
 
-/* Специфични икони и цветове за видовете */
-.icon-type { width: 1rem; height: 1rem; }
-.icon-type.bug { color: #ef4444; }
-.icon-type.feature { color: #3b82f6; }
-.icon-type.task { color: #9ca3af; }
-.icon-type.improvement { color: #22c55e; }
+.mp-icon-type { width: 1rem; height: 1rem; }
+.mp-icon-type.mp-bug { color: #ef4444; }
+.mp-icon-type.mp-feature { color: #3b82f6; }
+.mp-icon-type.mp-task { color: #9ca3af; }
+.mp-icon-type.mp-improvement { color: #22c55e; }
 
-/* Специфични икони и цветове за приоритетите */
-.icon-priority { width: 1rem; height: 1rem; }
-.icon-priority.urgent { color: #dc2626; }
-.icon-priority.high { color: #f97316; }
-.icon-priority.medium { color: #eab308; }
-.icon-priority.low { color: #3b82f6; }
+.mp-icon-priority { width: 1rem; height: 1rem; }
+.mp-icon-priority.mp-urgent { color: #dc2626; }
+.mp-icon-priority.mp-high { color: #f97316; }
+.mp-icon-priority.mp-medium { color: #eab308; }
+.mp-icon-priority.mp-low { color: #3b82f6; }
 
-.icon-bookmark-header {
+.mp-icon-bookmark-header {
   width: 1rem;
   height: 1rem;
   margin-left: auto;
@@ -692,8 +664,7 @@ textarea {
   color: #9ca3af;
 }
 
-/* Любими (Звезда) */
-.favorite-btn {
+.mp-favorite-btn {
   background: transparent;
   border: none;
   padding: 0.25rem;
@@ -701,7 +672,7 @@ textarea {
   display: inline-flex;
 }
 
-.star-icon {
+.mp-star-icon {
   width: 1.25rem;
   height: 1.25rem;
   color: #d1d5db;
@@ -709,17 +680,16 @@ textarea {
   transition: transform 0.2s, color 0.2s;
 }
 
-.star-icon:hover {
+.mp-star-icon:hover {
   color: #9ca3af;
 }
 
-.star-icon.favorited {
-  color: #facc15; /* жълто */
+.mp-star-icon.mp-favorited {
+  color: #facc15; 
   fill: #facc15;
 }
 
-/* Статус Бадж */
-.status-badge {
+.mp-status-badge {
   display: inline-flex;
   align-items: center;
   padding: 0.125rem 0.5rem;
@@ -731,32 +701,17 @@ textarea {
   color: #374151;
 }
 
-/* Изпълнител (Assignee) */
-.avatar-circle {
-  background-color: #0f172a;
-  color: #ffffff;
-  font-size: 10px;
-  font-weight: 700;
-  width: 1.25rem;
-  height: 1.25rem;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.text-assignee-name {
+.mp-text-assignee-name {
   color: #374151;
 }
 
-.unassigned-text {
+.mp-unassigned-text {
   color: #9ca3af;
   font-style: italic;
 }
 
 /* --- СТИЛОВЕ ЗА NEW ISSUE MODAL --- */
-
-.modal-overlay {
+.mp-modal-overlay {
   position: fixed;
   inset: 0;
   z-index: 50;
@@ -767,27 +722,27 @@ textarea {
   padding-right: 1rem;
 }
 
-.modal-backdrop {
+.mp-modal-backdrop {
   position: fixed;
   inset: 0;
-  background-color: rgba(15, 23, 42, 0.5); /* slate-900 с 50% прозрачност */
-  backdrop-filter: blur(4px); /* Ефект на замъгляване */
+  background-color: rgba(15, 23, 42, 0.5); 
+  backdrop-filter: blur(4px); 
   transition: all 0.2s;
 }
 
-.modal-box {
+.mp-modal-box {
   background-color: #ffffff;
-  border-radius: 0.75rem; /* rounded-xl */
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); /* shadow-2xl */
+  border-radius: 0.75rem; 
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
   width: 100%;
-  max-width: 32rem; /* max-w-lg */
+  max-width: 32rem; 
   overflow: hidden;
   position: relative;
   z-index: 10;
   transition: all 0.2s;
 }
 
-.modal-header {
+.mp-modal-header {
   padding: 1rem 1.5rem;
   border-bottom: 1px solid #f3f4f6;
   display: flex;
@@ -795,21 +750,21 @@ textarea {
   align-items: start;
 }
 
-.modal-title {
-  font-size: 1.125rem; /* text-lg */
+.mp-modal-title {
+  font-size: 1.125rem; 
   font-weight: 700;
   color: #111827;
   margin: 0;
 }
 
-.modal-subtitle {
+.mp-modal-subtitle {
   font-size: 0.75rem;
   color: #6b7280;
   margin-top: 0.125rem;
   margin-bottom: 0;
 }
 
-.modal-close-btn {
+.mp-modal-close-btn {
   background: transparent;
   border: none;
   color: #9ca3af;
@@ -820,41 +775,41 @@ textarea {
   transition: color 0.2s;
 }
 
-.modal-close-btn:hover {
+.mp-modal-close-btn:hover {
   color: #374151;
 }
 
-.modal-form {
+.mp-modal-form {
   padding: 1.5rem;
 }
 
-.form-fields-wrapper {
+.mp-form-fields-wrapper {
   display: flex;
   flex-direction: column;
-  gap: 1rem; /* space-y-4 */
+  gap: 1rem; 
 }
 
-.form-group-full {
+.mp-form-group-full {
   width: 100%;
 }
 
-.form-label {
+.mp-form-label {
   display: block;
   margin-bottom: 0.375rem;
   font-size: 0.875rem;
 }
 
-.form-label.font-bold {
+.mp-form-label.mp-font-bold {
   font-weight: 600;
   color: #111827;
 }
 
-.form-label.text-slate-700 {
+.mp-form-label.mp-text-slate-700 {
   font-weight: 500;
   color: #334155;
 }
 
-.form-input {
+.mp-form-input {
   width: 100%;
   background-color: #f9fafb;
   border: 1px solid #e5e7eb;
@@ -866,23 +821,22 @@ textarea {
   transition: border-color 0.2s;
 }
 
-.form-input:focus {
+.mp-form-input:focus {
   border-color: #0f172a;
 }
 
-.form-grid {
+.mp-form-grid {
   display: grid;
-  grid-column: 2; /* Тук се преизползва флекс или грид подредба */
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.form-group {
+.mp-form-group {
   display: flex;
   flex-direction: column;
 }
 
-.form-select {
+.mp-form-select {
   width: 100%;
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
@@ -894,18 +848,18 @@ textarea {
   transition: border-color 0.2s;
 }
 
-.form-select:focus {
+.mp-form-select:focus {
   border-color: #0f172a;
 }
 
-.modal-actions {
+.mp-modal-actions {
   margin-top: 2rem;
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
 }
 
-.btn-secondary {
+.mp-btn-secondary {
   padding: 0.5rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -917,11 +871,11 @@ textarea {
   transition: background-color 0.2s;
 }
 
-.btn-secondary:hover {
+.mp-btn-secondary:hover {
   background-color: #f9fafb;
 }
 
-.btn-primary-submit {
+.mp-btn-primary-submit {
   padding: 0.5rem 1.25rem;
   font-size: 0.875rem;
   font-weight: 500;
@@ -934,12 +888,11 @@ textarea {
   transition: background-color 0.2s;
 }
 
-.btn-primary-submit:hover {
+.mp-btn-primary-submit:hover {
   background-color: #1e293b;
 }
 
 /* --- СТИЛОВЕ ЗА SIDEBAR --- */
-
 .mp-sidebar-container {
   border-right: 1px solid #e5e7eb;
   display: flex;
@@ -948,8 +901,6 @@ textarea {
   flex-shrink: 0;
   position: relative;
   z-index: 10;
-  
-  /* Чисти размери и плавна анимация */
   width: 16rem; 
   transition: width 0.3s ease-in-out;
   min-width: 0;
@@ -962,7 +913,7 @@ textarea {
   display: flex;
   align-items: center;
   font-size: 0.875rem;
-  height: 4rem; /* h-16 */
+  height: 4rem; 
   position: relative;
 }
 
@@ -972,7 +923,7 @@ textarea {
   transition: all 0.3s ease-in-out;
   white-space: nowrap;
   opacity: 1;
-  max-width: 12.5rem; /* max-w-50 */
+  max-width: 12.5rem; 
 }
 
 .mp-sidebar-header-title {
@@ -1012,7 +963,7 @@ textarea {
   transition: transform 0.3s ease-in-out;
 }
 
-.mp-sidebar-chevron.rotated {
+.mp-sidebar-chevron.mp-rotated {
   transform: rotate(180deg);
 }
 
@@ -1021,12 +972,10 @@ textarea {
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem; /* space-y-2 */
+  gap: 0.5rem; 
   overflow-y: auto;
   overflow-x: hidden;
   font-size: 0.875rem;
-  
-  /* Гарантираме, че ще се свива заедно с родителя си */
   width: 100%;
   min-width: 0;
   box-sizing: border-box;
@@ -1054,11 +1003,7 @@ textarea {
   color: #4b5563;
   text-decoration: none;
   border-radius: 0.5rem;
-  
-  /* Анимираме само цветовете, не размерите */
   transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  
-  /* Караме ги да се режат интелигентно при свиване */
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -1070,14 +1015,14 @@ textarea {
   color: #111827;
 }
 
-.mp-sidebar-link.active {
+.mp-sidebar-link.mp-active {
   background-color: #0f172a;
   color: #ffffff;
   font-weight: 500;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
 }
 
-.mp-sidebar-link.active:hover {
+.mp-sidebar-link.mp-active:hover {
   background-color: #1e293b;
 }
 
@@ -1090,11 +1035,6 @@ textarea {
   justify-content: center;
 }
 
-.mp-sidebar-svg-icon {
-  width: 1.25rem;
-  height: 1.25rem;
-}
-
 .mp-sidebar-link-text {
   overflow: hidden;
   transition: all 0.3s ease-in-out;
@@ -1105,23 +1045,12 @@ textarea {
 }
 
 /* --- СЪСТОЯНИЕ ПРИ ЗАТВОРЕН SIDEBAR --- */
-
 .mp-sidebar-container.is-closed {
   width: 4rem; 
 }
 
-.mp-sidebar-container.is-closed .mp-sidebar-header-text {
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
-.mp-sidebar-container.is-closed .mp-sidebar-menu-title {
-  max-width: 0;
-  opacity: 0;
-  pointer-events: none;
-}
-
+.mp-sidebar-container.is-closed .mp-sidebar-header-text,
+.mp-sidebar-container.is-closed .mp-sidebar-menu-title,
 .mp-sidebar-container.is-closed .mp-sidebar-link-text {
   max-width: 0;
   opacity: 0;
@@ -1130,5 +1059,50 @@ textarea {
 }
 
 .mp-sidebar-container.is-closed .mp-sidebar-toggle-btn {
-  right: 0.875rem; /* Напасване на позицията в малката кутийка */
+  right: 0.875rem; 
+}
+
+/* ==========================================================================
+   🚨 ЗАЩИТНИ СТИЛОВЕ: ОГРАНИЧАВАНЕ НА РАЗМЕРИТЕ НА АВАТАРИТЕ И ИКОНИТЕ 🚨
+   ========================================================================== */
+
+.mp-user-avatar-btn, 
+.mp-header-actions .mp-user-avatar-btn,
+button.mp-user-avatar-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  max-width: 2rem !important;
+  max-height: 2rem !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mp-avatar-circle {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  min-width: 1.25rem !important;
+  min-height: 1.25rem !important;
+  max-width: 1.25rem !important;
+  max-height: 1.25rem !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mp-sidebar-svg-icon,
+.mp-icon-small,
+.mp-chevron-icon,
+.mp-bell-icon,
+.mp-search-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  max-width: 1.5rem !important;
+  max-height: 1.5rem !important;
+  flex-shrink: 0 !important;
 }

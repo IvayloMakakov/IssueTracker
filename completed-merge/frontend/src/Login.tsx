@@ -19,7 +19,7 @@ function validatePassword(password: string): string | null {
 }
 
 function isSuccess(data: AuthResponse): data is AuthSuccess {
-  return 'token' in data;
+  return data !== null && 'token' in data;
 }
 
 export default function Login() {
@@ -64,7 +64,7 @@ export default function Login() {
     setLoading(false);
 
     if (!ok || !isSuccess(data)) {
-      setError(('error' in data && data.error) || 'Request failed');
+      setError((data && 'error' in data && data.error) || 'Request failed');
       return;
     }
 
@@ -95,91 +95,95 @@ export default function Login() {
 
   if (session) {
     return (
-      <main className="card">
-        <h1>Issue Tracker</h1>
-        <p>Welcome, <strong>{session.user.firstName} {session.user.lastName}</strong>!</p>
-        <p className="token-label">Your token:</p>
-        <code className="token">{session.token}</code>
-        <button onClick={handleLogout}>Log out</button>
-      </main>
+      <div className="auth-screen-container">
+        <main className="auth-card">
+          <h1 className="auth-title">Issue Tracker</h1>
+          <p>Welcome, <strong>{session.user.firstName} {session.user.lastName}</strong>!</p>
+          <p className="auth-token-label">Your token:</p>
+          <code className="auth-token">{session.token}</code>
+          <button onClick={handleLogout}>Log out</button>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="card">
-      <h1>Issue Tracker</h1>
-      <h2 className="subtitle">{mode === 'login' ? 'Log in' : 'Create an account'}</h2>
+    <div className="auth-screen-container">
+      <main className="auth-card">
+        <h1 className="auth-title">Issue Tracker</h1>
+        <h2 className="auth-subtitle">{mode === 'login' ? 'Log in' : 'Create an account'}</h2>
 
-      <form className="form" onSubmit={handleSubmit}>
-        {mode === 'register' && (
-          <>
-            <label>
-              First name
-              <input
-                type="text"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                autoComplete="given-name"
-                required
-              />
-            </label>
-            <label>
-              Last name
-              <input
-                type="text"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                autoComplete="family-name"
-                required
-              />
-            </label>
-          </>
-        )}
-        <label>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            autoComplete="email"
-            required
-          />
-        </label>
-        <label>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-            required
-          />
+        <form className="auth-form" onSubmit={handleSubmit}>
           {mode === 'register' && (
-            <span className="hint">
-              At least 8 characters, including an uppercase letter, a lowercase letter, and a symbol (e.g. . , !).
-            </span>
+            <>
+              <label>
+                First name
+                <input
+                  type="text"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  autoComplete="given-name"
+                  required
+                />
+              </label>
+              <label>
+                Last name
+                <input
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  autoComplete="family-name"
+                  required
+                />
+              </label>
+            </>
           )}
-        </label>
-        <button type="submit" disabled={loading}>
-          {loading ? '...' : mode === 'login' ? 'Log in' : 'Register'}
-        </button>
-      </form>
+          <label>
+            Email
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              autoComplete="email"
+              required
+            />
+          </label>
+          <label>
+            Password
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+              required
+            />
+            {mode === 'register' && (
+              <span className="auth-hint">
+                At least 8 characters, including an uppercase letter, a lowercase letter, and a symbol (e.g. . , !).
+              </span>
+            )}
+          </label>
+          <button type="submit" disabled={loading}>
+            {loading ? '...' : mode === 'login' ? 'Log in' : 'Register'}
+          </button>
+        </form>
 
-      {error && <p className="message error">{error}</p>}
+        {error && <p className="auth-message auth-error">{error}</p>}
 
-      <p className="switch">
-        {mode === 'login' ? (
-          <>
-            Don't have an account?{' '}
-            <a href="#" onClick={switchMode('register')}>Register now!</a>
-          </>
-        ) : (
-          <>
-            Already have an account?{' '}
-            <a href="#" onClick={switchMode('login')}>Log in</a>
-          </>
-        )}
-      </p>
-    </main>
+        <p className="auth-switch">
+          {mode === 'login' ? (
+            <>
+              Don't have an account?{' '}
+              <a href="#" onClick={switchMode('register')}>Register now!</a>
+            </>
+          ) : (
+            <>
+              Already have an account?{' '}
+              <a href="#" onClick={switchMode('login')}>Log in</a>
+            </>
+          )}
+        </p>
+      </main>
+    </div>
   );
 }

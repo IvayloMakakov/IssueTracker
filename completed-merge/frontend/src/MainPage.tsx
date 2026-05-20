@@ -1,4 +1,3 @@
-// frontend/src/App.tsx
 import { useState, useEffect } from 'react';
 import type { Issue, Notification } from './mainPageApi';
 import { Sidebar } from './components/SideBar';
@@ -54,6 +53,7 @@ export default function MainPage() {
     }
   };
 
+  // Оправено съгласно сигнатурата на NewIssueModal: приема отделни аргументи
   const handleCreateIssue = async (
     title: string, 
     type: Issue['type'], 
@@ -72,26 +72,22 @@ export default function MainPage() {
       
       const savedIssue = await response.json();
       setIssues(prev => [savedIssue, ...prev]);
+
+      // Оправено id да бъде string (заради първата грешка на скрийншота)
+      const newNotif: Notification = {
+        id: `notif-${Date.now()}`,
+        title: 'New Issue Created',
+        desc: `Issue ${savedIssue.id || 'new'} was created by ${assigneeName}`, // Върнато към desc
+        date: 'Just now',
+        unread: true,
+        type: 'assignment', // Променено на 'assignment' съгласно интерфейса ти
+        targetId: savedIssue.id || ''
+      };
+      setNotifications(prev => [newNotif, ...prev]);
+
     } catch (error) {
       console.error("Грешка при създаване на задача:", error);
     }
-  };
-
-  const handleNotificationsChange = async (update: React.SetStateAction<Notification[]>) => {
-    const nextNotifs = typeof update === 'function' ? update(notifications) : update;
-
-    if (nextNotifs.every(n => !n.unread) && notifications.some(n => n.unread)) {
-      try {
-        const response = await fetch('/api/notifications/read-all', { method: 'PATCH' });
-        const updatedNotifsFromServer = await response.json();
-        setNotifications(updatedNotifsFromServer);
-        return;
-      } catch (err) {
-        console.error("Грешка при маркиране на всички:", err);
-      }
-    }
-
-    setNotifications(nextNotifs);
   };
 
   const getFilteredIssues = () => {
@@ -103,6 +99,8 @@ export default function MainPage() {
 
     if (activeTab === 'assigned') {
       list = list.filter(issue => issue.assignee?.name === CURRENT_USER);
+    } else if (activeTab === 'starred') {
+      list = list.filter(issue => issue.isFavorite);
     } else if (activeTab === 'recent') {
       list = list.sort((a, b) => b.id.localeCompare(a.id));
     } else if (activeTab === 'created' || activeTab === 'watched') {
@@ -117,26 +115,26 @@ export default function MainPage() {
   };
 
   return (
-    <div className="app-container">
+    <div className="mp-app-container">
       <Header 
         issues={issues} 
         notifications={notifications} 
-        setNotifications={handleNotificationsChange}
+        setNotifications={setNotifications} // Върнат към чист State Setter (оправя грешка №4)
         onSelectIssue={(id) => setSelectedIssueId(id)}
         onOpenModal={() => setIsModalOpen(true)}
       />
       
-      <div className="main-layout">
+      <div className="mp-main-layout">
         <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         
-        <main className="content-area">
-          <div className="page-header">
+        <main className="mp-content-area">
+          <div className="mp-page-header">
             <div>
-              <h1 className="page-title">Issues List</h1>
-              <p className="page-subtitle">View and filter live issues connected to Node.js</p>
+              <h1 className="mp-page-title">Issues List</h1>
+              <p className="mp-page-subtitle">View and filter live issues connected to Node.js</p>
             </div>
             {selectedIssueId && (
-              <button onClick={() => setSelectedIssueId(null)} className="clear-search-btn">
+              <button onClick={() => setSelectedIssueId(null)} className="mp-clear-search-btn">
                 Clear Search Filter ✕
               </button>
             )}

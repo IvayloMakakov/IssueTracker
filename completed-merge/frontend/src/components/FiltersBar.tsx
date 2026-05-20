@@ -1,5 +1,5 @@
 // frontend/src/components/FiltersBar.tsx
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface FiltersBarProps {
   activeTab: string;
@@ -24,14 +24,14 @@ export const FiltersBar: React.FC<FiltersBarProps> = ({
   ];
 
   return (
-    <div className="filters-container">
-      {/* Animated Tabs */}
-      <div className="tabs-wrapper">
+    <div className="mp-filters-container">
+      {/* Tabs */}
+      <div className="mp-tabs-wrapper">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+            className={`mp-tab-btn ${activeTab === tab.id ? 'mp-active' : ''}`}
           >
             {tab.name}
           </button>
@@ -39,8 +39,8 @@ export const FiltersBar: React.FC<FiltersBarProps> = ({
       </div>
 
       {/* Filters Dropdowns Bar */}
-      <div className="dropdowns-bar">
-        <div className="dropdowns-group">
+      <div className="mp-dropdowns-bar">
+        <div className="mp-dropdowns-group">
           <DropdownFilter label="Status" currentValue={activeStatus} onChange={setActiveStatus} options={['All', 'To Do', 'In Progress', 'In Review', 'Done', 'Backlog']} />
           <DropdownFilter label="Priority" currentValue={activePriority} onChange={setActivePriority} options={['All', 'Urgent', 'High', 'Medium', 'Low']} />
           <DropdownFilter label="Type" currentValue={activeType} onChange={setActiveType} options={['All', 'Bug', 'Feature', 'Task', 'Improvement']} />
@@ -50,18 +50,46 @@ export const FiltersBar: React.FC<FiltersBarProps> = ({
   );
 };
 
+// Използваме useRef и useEffect за затваряне (същата логика като в Header.tsx)
 const DropdownFilter: React.FC<{ label: string, currentValue: string, onChange: (val: string) => void, options: string[] }> = ({ label, currentValue, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
-    <div className="dropdown-container" onBlur={() => setTimeout(() => setIsOpen(false), 200)}>
-      <button onClick={() => setIsOpen(!isOpen)} className="filter-trigger">
+    <div ref={containerRef} className="mp-dropdown-container">
+      <button 
+        type="button"
+        onClick={() => setIsOpen(!isOpen)} 
+        className="mp-filter-trigger"
+      >
         <span>{currentValue === 'All' ? `All ${label}es` : currentValue}</span>
-        <svg className={`chevron-icon ${isOpen ? 'rotated' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" /></svg>
+        <svg className={`mp-chevron-icon ${isOpen ? 'mp-rotated' : ''}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+        </svg>
       </button>
+      
       {isOpen && (
-        <div className="dropdown-menu">
+        <div className="mp-dropdown-menu">
           {options.map(opt => (
-            <button key={opt} onClick={() => onChange(opt)} className="dropdown-item">
+            <button 
+              key={opt} 
+              type="button"
+              onClick={() => {
+                onChange(opt); // Сработва гарантирано първо!
+                setIsOpen(false); // Затваря менюто чак след избора
+              }} 
+              className="mp-dropdown-item"
+            >
               {opt === 'All' ? `All ${label}es` : opt}
             </button>
           ))}

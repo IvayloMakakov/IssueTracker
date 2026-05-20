@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
-import { login, register, fetchMe, type AuthResponse, type AuthSuccess, type User } from './login';
+import { login, register, fetchMe, type AuthResponse, type AuthSuccess, type User } from './loginApi';
 
 type Mode = 'login' | 'register';
 

@@ -54,40 +54,16 @@ export default function MainPage() {
   };
 
   // Оправено съгласно сигнатурата на NewIssueModal: приема отделни аргументи
-  const handleCreateIssue = async (
-    title: string, 
-    type: Issue['type'], 
-    priority: Issue['priority'], 
-    status: Issue['status'], 
-    assigneeName: string
-  ) => {
-    const payload = { title, type, priority, status, assigneeName };
-
-    try {
-      const response = await fetch('/api/issues', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      
-      const savedIssue = await response.json();
-      setIssues(prev => [savedIssue, ...prev]);
-
-      // Оправено id да бъде string (заради първата грешка на скрийншота)
-      const newNotif: Notification = {
-        id: `notif-${Date.now()}`,
-        title: 'New Issue Created',
-        desc: `Issue ${savedIssue.id || 'new'} was created by ${assigneeName}`, // Върнато към desc
-        date: 'Just now',
-        unread: true,
-        type: 'assignment', // Променено на 'assignment' съгласно интерфейса ти
-        targetId: savedIssue.id || ''
-      };
-      setNotifications(prev => [newNotif, ...prev]);
-
-    } catch (error) {
-      console.error("Грешка при създаване на задача:", error);
-    }
+  const handleCreateIssue = (title: string, type: any, priority: any, status: any, assigneeName: string) => {
+    fetch('/api/issues', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ title, type, priority, status, assigneeName })
+    })
+    .then(res => res.json())
+    .then(newIssue => {
+      setIssues(prev => [newIssue, ...prev]); // Добавя я най-отгоре в списъка
+    });
   };
 
   const getFilteredIssues = () => {

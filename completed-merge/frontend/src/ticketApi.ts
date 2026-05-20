@@ -1,6 +1,6 @@
 // frontend/src/api.ts
 
-const BASE_URL = 'http://localhost:3000/api';
+const BASE_URL = 'http://10.108.5.4:3000/api';
 
 // Вземане на билета
 export const fetchTicketData = async () => {
@@ -25,5 +25,11 @@ export const addTicketComment = async (text: string, author: string) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, author })
     });
+    return res.json();
+};
+
+export const fetchAllUsers = async () => {
+    const res = await fetch(`${BASE_URL}/users`);
+    if (!res.ok) throw new Error('Грешка при извличане на потребителите');
     return res.json();
 };

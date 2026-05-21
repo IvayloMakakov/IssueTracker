@@ -1,1 +1,3 @@
-Left the backend inside, not if we should delete it, we'll decide later :D
+Left the backend inside.
+Not sure if we should delete it. (Probably doesn't work with current frontend code)
+We'll decide later :D

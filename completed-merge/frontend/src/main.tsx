@@ -1,17 +1,13 @@
+// frontend/src/main.tsx
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import App from './App';
 
-import Login from './Login.tsx';
-import './login.css';
-
-import MainPage from './MainPage';
-import './mainPage.css';
-
-import Ticket from './Ticket';
-import './ticket.css';
-
-ReactDOM.createRoot(document.getElementById('root') as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Ticket />
-  </React.StrictMode>,
+    <BrowserRouter>
+      <App />
+    </BrowserRouter>
+  </React.StrictMode>
 );

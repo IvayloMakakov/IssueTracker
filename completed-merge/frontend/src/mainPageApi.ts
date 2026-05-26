@@ -23,3 +23,9 @@ export interface Notification {
   targetId: string;
   unread: boolean;
 }
+
+export const fetchUsers = async () => {
+  const response = await fetch('/api/users');
+  if (!response.ok) throw new Error('Грешка при взимане на потребителите');
+  return response.json(); // Връща масив от [{id, firstName, lastName}, ...]
+};

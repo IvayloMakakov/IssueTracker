@@ -1,11 +1,13 @@
+// frontend/src/Login.tsx
+import './login.css';
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
-import { login, register, fetchMe, type AuthResponse, type AuthSuccess, type User } from './loginApi';
+import { useNavigate } from 'react-router-dom';
+import { login, register, fetchMe, type AuthResponse, type AuthSuccess } from './loginApi';
 
 type Mode = 'login' | 'register';
 
-interface Session {
-  user: User;
-  token: string;
+interface LoginProps {
+  onLoginSuccess: () => void;
 }
 
 const SYMBOL_RE = /[.,!?@#$%^&*()_\-+=\[\]{};:'"\\|<>/~`]/;
@@ -22,27 +24,32 @@ function isSuccess(data: AuthResponse): data is AuthSuccess {
   return data !== null && 'token' in data;
 }
 
-export default function Login() {
+export default function Login({ onLoginSuccess }: LoginProps) {
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>('login');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  // Проверка за съществуващ токен при зареждане
+useEffect(() => {
     const token = localStorage.getItem('token');
-    if (!token) return;
-    fetchMe(token).then((user) => {
-      if (user) {
-        setSession({ user, token });
-      } else {
-        localStorage.removeItem('token');
-      }
-    });
-  }, []);
+    if (token) {
+        setLoading(true);
+        fetchMe(token).then((user) => {
+            if (user) {
+                onLoginSuccess();
+                navigate('/');
+            } else {
+                localStorage.removeItem('token');
+            }
+            setLoading(false); // Спри зареждането
+        });
+    }
+}, [navigate, onLoginSuccess]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -57,82 +64,94 @@ export default function Login() {
     }
 
     setLoading(true);
-    const { ok, data } =
-      mode === 'login'
-        ? await login(email, password)
-        : await register(firstName, lastName, email, password);
-    setLoading(false);
 
-    if (!ok || !isSuccess(data)) {
-      setError((data && 'error' in data && data.error) || 'Request failed');
-      return;
+    if (mode === 'register') {
+      // --- РЕЖИМ: РЕГИСТРАЦИЯ ---
+      const { ok, data } = await register(firstName, lastName, email, password);
+      setLoading(false);
+
+      if (!ok || !data) {
+        setError('Нещо се обърка при връзката със сървъра.');
+        return;
+      }
+
+      if ('error' in data) {
+        setError(data.error || 'Registration failed');
+        return;
+      }
+
+      alert('Регистрацията е успешна! Моля, влезте в профила си.');
+      setMode('login');
+      setPassword('');
+      
+    } else {
+      // --- РЕЖИМ: ВХОД (LOGIN) ---
+      const { ok, data } = await login(email, password);
+      setLoading(false);
+
+      if (!ok || !data) {
+        setError('Нещо се обърка при връзката със сървъра.');
+        return;
+      }
+
+      if ('error' in data) {
+        setError(data.error || 'Невалиден имейл или парола');
+        return;
+      }
+
+      if (!isSuccess(data) || !data.token) {
+        setError('Невалиден имейл или парола');
+        return;
+      }
+
+      // 1. Запазваме токена в браузъра
+      localStorage.setItem('token', data.token);
+      
+      // 2. Вдигаме стейта в App.tsx, за да се отключи маршрута "/"
+      onLoginSuccess();
+
+      // 3. Препращаме към началното табло
+      navigate('/');
     }
 
-    localStorage.setItem('token', data.token);
-    setSession({
-      user: { firstName: data.firstName, lastName: data.lastName, email: data.email },
-      token: data.token,
-    });
     setFirstName('');
     setLastName('');
     setEmail('');
     setPassword('');
   }
 
-  function handleLogout() {
-    localStorage.removeItem('token');
-    setSession(null);
-  }
-
-  function switchMode(next: Mode) {
-    return (e: MouseEvent<HTMLAnchorElement>) => {
-      e.preventDefault();
-      setMode(next);
-      setError(null);
-      setPassword('');
-    };
-  }
-
-  if (session) {
-    return (
-      <div className="auth-screen-container">
-        <main className="auth-card">
-          <h1 className="auth-title">Issue Tracker</h1>
-          <p>Welcome, <strong>{session.user.firstName} {session.user.lastName}</strong>!</p>
-          <p className="auth-token-label">Your token:</p>
-          <code className="auth-token">{session.token}</code>
-          <button onClick={handleLogout}>Log out</button>
-        </main>
-      </div>
-    );
-  }
+  const switchMode = (target: Mode) => (e: MouseEvent) => {
+    e.preventDefault();
+    setMode(target);
+    setError(null);
+  };
 
   return (
     <div className="auth-screen-container">
-      <main className="auth-card">
-        <h1 className="auth-title">Issue Tracker</h1>
-        <h2 className="auth-subtitle">{mode === 'login' ? 'Log in' : 'Create an account'}</h2>
+      <div className="auth-card">
+        <h1 className="auth-title">Welcome</h1>
+        <p className="auth-subtitle">
+          {mode === 'login' ? 'Log in to your account' : 'Create a new account'}
+        </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {mode === 'register' && (
             <>
               <label>
-                First name
+                First Name
                 <input
                   type="text"
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
-                  autoComplete="given-name"
                   required
                 />
               </label>
               <label>
-                Last name
+                Last Name
                 <input
                   type="text"
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
-                  autoComplete="family-name"
                   required
                 />
               </label>
@@ -183,7 +202,7 @@ export default function Login() {
             </>
           )}
         </p>
-      </main>
+      </div>
     </div>
   );
 }

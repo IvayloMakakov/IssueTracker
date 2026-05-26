@@ -1,18 +1,36 @@
+// vite.config.ts
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import os from 'os';
+
+function getLocalIPv4() {
+  const interfaces = os.networkInterfaces();
+  for (const interfaceName in interfaces) {
+    const networkInterface = interfaces[interfaceName];
+    if (networkInterface) {
+      for (const auth of networkInterface) {
+        if (auth.family === 'IPv4' && !auth.internal) {
+          return auth.address;
+        }
+      }
+    }
+  }
+  return 'localhost';
+}
+
+const localIP = getLocalIPv4();
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    host: true, // Позволява на Vite да излъчва в локалната мрежа
+    host: localIP, 
     port: 5173,
     proxy: {
       '/api': {
-        // ЗАМЕНИ localhost с IP-то на Лаптоп А (Сървъра)
-        target: 'http://10.108.5.4:3000', 
+        target: 'http://localhost:3000',
         changeOrigin: true,
-        secure: false
+        secure: false,
       }
     }
   }
-})
+});

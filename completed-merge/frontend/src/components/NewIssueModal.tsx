@@ -2,7 +2,6 @@
 import React, { useState, useEffect } from 'react';
 import type { Issue } from '../mainPageApi';
 
-// Дефинираме интерфейс за потребителите, които идват от базата данни
 interface User {
   id: number;
   firstName: string;
@@ -12,20 +11,20 @@ interface User {
 interface NewIssueModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: (title: string, type: Issue['type'], priority: Issue['priority'], status: Issue['status'], assigneeName: string) => void;
+  // Добавено description в дефиницията на onCreate
+  onCreate: (title: string, description: string, type: Issue['type'], priority: Issue['priority'], status: Issue['status'], assigneeName: string) => void;
 }
 
 export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, onCreate }) => {
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState(''); // Нов State за описанието
   const [type, setType] = useState<Issue['type']>('Task');
   const [priority, setPriority] = useState<Issue['priority']>('Medium');
   const [status, setStatus] = useState<Issue['status']>('To Do');
   const [assignee, setAssignee] = useState('unassigned');
   
-  // State за съхранение на динамичния списък с потребители
   const [users, setUsers] = useState<User[]>([]);
 
-  // Издърпваме потребителите от бекенда веднага щом модалният прозорец се зареди
   useEffect(() => {
     if (isOpen) {
       fetch('/api/users')
@@ -35,7 +34,6 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
         })
         .then((data: User[]) => {
           setUsers(data);
-          // Ако има върнати потребители и нямаме избран, избираме първия автоматично като fallback
           if (data.length > 0 && assignee === 'unassigned') {
             setAssignee(`${data[0].firstName} ${data[0].lastName}`);
           }
@@ -48,22 +46,21 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onCreate(title, type, priority, status, assignee);
+    // Подаваме description като втори аргумент
+    onCreate(title, description, type, priority, status, assignee);
     setTitle(''); 
+    setDescription(''); // Нулираме описанието
     setType('Task'); 
     setPriority('Medium'); 
     setStatus('To Do'); 
-    // Зануляваме към първия наличен потребител, ако има такъв
     setAssignee(users.length > 0 ? `${users[0].firstName} ${users[0].lastName}` : 'unassigned');
     onClose();
   };
 
   return (
     <div className="mp-modal-overlay">
-      {/* Backdrop */}
       <div onClick={onClose} className="mp-modal-backdrop"></div>
       
-      {/* Modal Box */}
       <div className="mp-modal-box">
         <div className="mp-modal-header">
           <div>
@@ -84,6 +81,19 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
                 onChange={(e) => setTitle(e.target.value)} 
                 placeholder="Enter issue title" 
                 className="mp-form-input" 
+              />
+            </div>
+
+            {/* НОВО: Поле за Описание */}
+            <div className="mp-form-group-full">
+              <label className="mp-form-label mp-font-bold">Description</label>
+              <textarea 
+                value={description} 
+                onChange={(e) => setDescription(e.target.value)} 
+                placeholder="Describe the issue in details..." 
+                className="mp-form-input"
+                // ПРОМЯНА ТУК: Сменяме resize: 'vertical' на resize: 'none'
+                style={{ minHeight: '100px', resize: 'none', fontFamily: 'inherit' }} 
               />
             </div>
 
@@ -119,7 +129,6 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
               <div className="mp-form-group">
                 <label className="mp-form-label mp-text-slate-700">Assignee</label>
                 <select value={assignee} onChange={(e) => setAssignee(e.target.value)} className="mp-form-select">
-                  {/* Тъй като базата ти изисква НЕ-NULL стойност, махаме Unassigned опцията */}
                   {users.map((user) => {
                     const fullName = `${user.firstName} ${user.lastName}`;
                     return (

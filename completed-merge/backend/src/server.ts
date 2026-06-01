@@ -102,7 +102,7 @@ app.get('/api/me', async (req: Request, res: Response): Promise<any> => {
     const decoded = jwt.verify(token, JWT_SECRET) as { id: number; email: string };
 
     // 3. Търсим потребителя в базата данни по ID
-    const user = await db.get('SELECT firstName, lastName, email FROM User WHERE id = ?', [decoded.id]);
+    const user = await db.get('SELECT id, firstName, lastName, email FROM User WHERE id = ?', [decoded.id]);    
     
     if (!user) {
       return res.status(404).json({ error: 'Потребителят не е намерен' });
@@ -172,6 +172,8 @@ app.get('/api/issues', async (req: Request, res: Response) => {
     `);
 
     const formattedIssues = rows.map(row => {
+      const hasValidUser = row.firstName && row.lastName;
+
       return {
         id: row.displayId || `ISSUE-${row.id}`,
         title: row.title,
@@ -180,8 +182,8 @@ app.get('/api/issues', async (req: Request, res: Response) => {
         priority: row.priority,
         updatedAt: row.updatedAt,
         isFavorite: !!row.isFavorite,
-        // Създаваме assignee обекта САМО ако имаме валиден потребител
-        assignee: (row.assigneeId) ? {
+        creatorId: row.creatorId, // ВАЖНО: Увери се, че този ред присъства!
+        assignee: (row.assigneeId && hasValidUser) ? {
           name: `${row.firstName} ${row.lastName}`,
           initial: `${row.firstName[0]}${row.lastName[0]}`.toUpperCase()
         } : null
@@ -209,7 +211,7 @@ app.post('/api/issues', async (req: Request, res: Response): Promise<any> => {
     return res.status(401).json({ error: 'Невалиден или изтекъл токен' });
   }
 
-  const { title, type, priority, status, assigneeName } = req.body;
+  const { title, description, type, priority, status, assigneeName } = req.body;
 
   if (!title) {
     return res.status(400).json({ error: 'Заглавието е задължително поле!' });
@@ -229,17 +231,26 @@ app.post('/api/issues', async (req: Request, res: Response): Promise<any> => {
     }
 
     // 4. Генерираме следващия displayId (напр. ISS-1, ISS-2...)
-    const countResult = await db.get('SELECT COUNT(*) as count FROM Issue');
-    const nextId = (countResult?.count || 0) + 1;
+    const lastIssue = await db.get("SELECT displayId FROM Issue ORDER BY id DESC LIMIT 1");
+    let nextId = 1;
+
+    if (lastIssue && lastIssue.displayId) {
+      // Извличаме числото след "ISS-" (напр. от "ISS-8" взимаме 8)
+      const lastNumber = parseInt(lastIssue.displayId.replace('ISS-', ''), 10);
+      if (!isNaN(lastNumber)) {
+        nextId = lastNumber + 1;
+      }
+    }
+
     const displayId = `ISS-${nextId}`;
 
     const nowIso = new Date().toISOString();
 
     // 5. Записваме задачата с истинския creatorId
     await db.run(
-      `INSERT INTO Issue (displayId, title, type, status, priority, creatorId, assigneeId, createdAt, updatedAt) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [displayId, title, type, status, priority, creatorId, assigneeId, nowIso, nowIso]
+      `INSERT INTO Issue (displayId, title, description, type, status, priority, creatorId, assigneeId, createdAt, updatedAt) 
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [displayId, title, description || "", type, status, priority, creatorId, assigneeId, nowIso, nowIso]
     );
 
     const newIssue = {

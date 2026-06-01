@@ -96,17 +96,24 @@ export default function MainPage() {
     }
   };
 
-  const handleCreateIssue = (title: string, type: any, priority: any, status: any, assigneeName: string) => {
-    // 1. Взимаме токена от браузъра
+  const handleCreateIssue = (
+    title: string, 
+    description: string, // Първа важна добавка: подреждаме аргументите правилно!
+    type: any, 
+    priority: any, 
+    status: any, 
+    assigneeName: string
+  ) => {
     const token = localStorage.getItem('token');
 
     fetch('/api/issues', {
       method: 'POST',
       headers: { 
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}` // 2. Изпращаме го към бекенда!
+        'Authorization': `Bearer ${token}`
       },
-      body: JSON.stringify({ title, type, priority, status, assigneeName })
+      // Изпращаме description към сървъра заедно с останалите правилно подредени полета
+      body: JSON.stringify({ title, description, type, priority, status, assigneeName })
     })
     .then(res => res.json())
     .then(newIssue => {
@@ -114,6 +121,7 @@ export default function MainPage() {
         console.error(newIssue.error);
         return;
       }
+      // Добавяме новата задача в стейта
       setIssues(prev => [newIssue, ...prev]);
     })
     .catch(err => console.error('Грешка при създаване на задача:', err));
@@ -125,16 +133,21 @@ export default function MainPage() {
     let list = [...issues];
     const userFullName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : '';
 
+    // 1. Филтриране по активен таб
     if (activeTab === 'assigned') {
+      // Задачи, назначени на мен
       list = list.filter(issue => issue.assignee?.name === userFullName);
-    } else if (activeTab === 'starred') {
+    } else if (activeTab === 'starred' || activeTab === 'watched') {
+      // ПОПРАВКА: При "Watched" излизат тези, които са отбелязани като любими (favourites / isFavorite)
       list = list.filter(issue => issue.isFavorite);
+    } else if (activeTab === 'created') {
+      // Кастваме към Number за всеки случай, за да избегнем несъответствие тип string/number
+      list = list.filter(issue => Number(issue.creatorId) === Number(currentUser?.id));
     } else if (activeTab === 'recent') {
       list = list.sort((a, b) => b.id.localeCompare(a.id));
-    } else if (activeTab === 'created' || activeTab === 'watched') {
-      list = [];
     }
 
+    // 2. Допълнително филтриране по падащите менюта (Status, Priority, Type)
     if (activeStatus !== 'All') list = list.filter(i => i.status === activeStatus);
     if (activePriority !== 'All') list = list.filter(i => i.priority === activePriority);
     if (activeType !== 'All') list = list.filter(i => i.type === activeType);

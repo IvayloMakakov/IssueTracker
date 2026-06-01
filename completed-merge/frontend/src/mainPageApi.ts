@@ -12,6 +12,7 @@ export interface Issue {
   assignee: Assignee | null;
   updatedAt: string;
   isFavorite: boolean;
+  creatorId: number; // Направи го задължителен number
 }
 
 export interface Notification {

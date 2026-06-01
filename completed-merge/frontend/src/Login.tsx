@@ -2,7 +2,7 @@
 import './login.css';
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, register, fetchMe, type AuthResponse, type AuthSuccess } from './loginApi';
+import { login, register, fetchMe, type AuthResponse } from './loginApi'; // ОПРАВЕНО: Премахнат е AuthSuccess от импорта
 
 type Mode = 'login' | 'register';
 
@@ -13,15 +13,11 @@ interface LoginProps {
 const SYMBOL_RE = /[.,!?@#$%^&*()_\-+=\[\]{};:'"\\|<>/~`]/;
 
 function validatePassword(password: string): string | null {
-  if (password.length < 8) return 'Password must be at least 8 characters long';
-  if (!/[A-Z]/.test(password)) return 'Password must contain at least one uppercase letter';
-  if (!/[a-z]/.test(password)) return 'Password must contain at least one lowercase letter';
-  if (!SYMBOL_RE.test(password)) return 'Password must contain at least one symbol (e.g. . , ! ? @ #)';
+  if (password.length < 8) return 'Паролата трябва да бъде поне 8 символа дълга!';
+  if (!/[A-Z]/.test(password)) return 'Паролата трябва да съдържа поне една главна буква!';
+  if (!/[a-z]/.test(password)) return 'Паролата трябва да съдържа поне една малка буква!';
+  if (!SYMBOL_RE.test(password)) return 'Паролата трябва да съдържа поне един специален символ (напр. . , ! ? @)';
   return null;
-}
-
-function isSuccess(data: AuthResponse): data is AuthSuccess {
-  return data !== null && 'token' in data;
 }
 
 export default function Login({ onLoginSuccess }: LoginProps) {
@@ -34,36 +30,26 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Проверка за съществуващ токен при зареждане
-useEffect(() => {
+  // Проверка за съществуващ токен при първоначално зареждане
+  useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-        setLoading(true);
-        fetchMe(token).then((user) => {
-            if (user) {
-                onLoginSuccess();
-                navigate('/');
-            } else {
-                localStorage.removeItem('token');
-            }
-            setLoading(false); // Спри зареждането
-        });
+      setLoading(true);
+      fetchMe(token).then((user) => {
+        if (user) {
+          onLoginSuccess();
+          navigate('/');
+        } else {
+          localStorage.removeItem('token');
+        }
+        setLoading(false);
+      });
     }
-}, [navigate, onLoginSuccess]);
+  }, [navigate, onLoginSuccess]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError(null);
-
-    if (mode === 'register') {
-      const pwError = validatePassword(password);
-      if (pwError) {
-        setError(pwError);
-        return;
-      }
-    }
-
-    setLoading(true);
 
     if (mode === 'register') {
       // --- РЕЖИМ: РЕГИСТРАЦИЯ ---
@@ -75,11 +61,13 @@ useEffect(() => {
         return;
       }
 
-      if ('error' in data) {
-        setError(data.error || 'Registration failed');
+      // ОПРАВЕНО: Прихващаме грешката за съществуващ имейл от новия формат на бекенда
+      if (data.success === false) {
+        setError(data.error || 'Регистрацията беше неуспешна.');
         return;
       }
 
+      // Ако регистрацията е напълно успешна
       alert('Регистрацията е успешна! Моля, влезте в профила си.');
       setMode('login');
       setPassword('');
@@ -94,24 +82,20 @@ useEffect(() => {
         return;
       }
 
-      if ('error' in data) {
+      // Случай 2 и 3: Ако success е false, изписваме детайлната грешка директно
+      if (data.success === false) {
         setError(data.error || 'Невалиден имейл или парола');
         return;
       }
 
-      if (!isSuccess(data) || !data.token) {
-        setError('Невалиден имейл или парола');
-        return;
+      // Случай 1: Успешен вход (Имаме генериран токен от бекенда)
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        onLoginSuccess();
+        navigate('/');
+      } else {
+        setError('Възникна аномалия при автентикацията.');
       }
-
-      // 1. Запазваме токена в браузъра
-      localStorage.setItem('token', data.token);
-      
-      // 2. Вдигаме стейта в App.tsx, за да се отключи маршрута "/"
-      onLoginSuccess();
-
-      // 3. Препращаме към началното табло
-      navigate('/');
     }
 
     setFirstName('');
@@ -129,16 +113,17 @@ useEffect(() => {
   return (
     <div className="auth-screen-container">
       <div className="auth-card">
+        <div className="auth-logo-badge">IT</div>
         <h1 className="auth-title">Welcome</h1>
         <p className="auth-subtitle">
-          {mode === 'login' ? 'Log in to your account' : 'Create a new account'}
+          {mode === 'login' ? 'Влезте в своя профил' : 'Създайте нов акаунт в системата'}
         </p>
 
         <form className="auth-form" onSubmit={handleSubmit}>
           {mode === 'register' && (
-            <>
-              <label>
-                First Name
+            <div className="auth-form-row">
+              <label style={{ flex: 1 }}>
+                Име
                 <input
                   type="text"
                   value={firstName}
@@ -146,8 +131,8 @@ useEffect(() => {
                   required
                 />
               </label>
-              <label>
-                Last Name
+              <label style={{ flex: 1 }}>
+                Фамилия
                 <input
                   type="text"
                   value={lastName}
@@ -155,10 +140,11 @@ useEffect(() => {
                   required
                 />
               </label>
-            </>
+            </div>
           )}
+          
           <label>
-            Email
+            Имейл адрес
             <input
               type="email"
               value={email}
@@ -167,8 +153,9 @@ useEffect(() => {
               required
             />
           </label>
+          
           <label>
-            Password
+            Парола
             <input
               type="password"
               value={password}
@@ -178,12 +165,13 @@ useEffect(() => {
             />
             {mode === 'register' && (
               <span className="auth-hint">
-                At least 8 characters, including an uppercase letter, a lowercase letter, and a symbol (e.g. . , !).
+                Минимум 8 символа, включващи главна буква, малка буква и специален знак (напр. . , ! ? @).
               </span>
             )}
           </label>
+          
           <button type="submit" disabled={loading}>
-            {loading ? '...' : mode === 'login' ? 'Log in' : 'Register'}
+            {loading ? 'Изчакване...' : mode === 'login' ? 'Вход' : 'Регистрация'}
           </button>
         </form>
 
@@ -192,13 +180,13 @@ useEffect(() => {
         <p className="auth-switch">
           {mode === 'login' ? (
             <>
-              Don't have an account?{' '}
-              <a href="#" onClick={switchMode('register')}>Register now!</a>
+              Нямате акаунт?{' '}
+              <a href="#" onClick={switchMode('register')}>Регистрирайте се сега!</a>
             </>
           ) : (
             <>
-              Already have an account?{' '}
-              <a href="#" onClick={switchMode('login')}>Log in</a>
+              Вече имате акаунт?{' '}
+              <a href="#" onClick={switchMode('login')}>Влезте в профила</a>
             </>
           )}
         </p>

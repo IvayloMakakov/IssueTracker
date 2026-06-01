@@ -2,20 +2,28 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchTicketData, updateTicketField, addTicketComment, fetchAllUsers } from './ticketApi';
+import { Header } from './components/Header';
+import type { Issue, Notification } from './mainPageApi';
 import './ticket.css';
+import './mainPage.css';
 
 type Status = "Backlog" | "To Do" | "In Progress" | "In Review" | "Done";
 type Priority = "Low" | "Medium" | "High" | "Urgent";
 
-// 1. Дефинираме интерфейса, за да не гърми TypeScript
 interface DbUser {
   id: number;
   firstName: string;
   lastName: string;
 }
 
-const optionsStatus: Status[] = ["Backlog", "To Do", "In Progress", "In Review", "Done"];
 const optionsPriority: Priority[] = ["Low", "Medium", "High", "Urgent"];
+const allowedNextStatus: Record<Status, Status[]> = {
+  "Backlog": ["Backlog", "To Do"],
+  "To Do": ["To Do", "In Progress"],
+  "In Progress": ["In Progress", "In Review"],
+  "In Review": ["In Review", "Done"],
+  "Done": ["Done"]
+};
 
 const getInitials = (authorName: string) => {
   if (!authorName) return "U";
@@ -26,9 +34,13 @@ export default function Ticket() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // 2. Дефинираме стейтовете вътре в компонента
-  const [currentUser, setCurrentUser] = useState<{ name: string, avatar: string } | null>(null);
-  const [ticket, setTicket] = useState<{title: string, description: string, status: Status, priority: Priority, assigneeId: number} | null>(null);
+  // Данни за заглавната лента (Header)
+  const [headerUser, setHeaderUser] = useState<{ id: number; firstName: string; lastName: string; email: string } | null>(null);
+  const [allIssues, setAllIssues] = useState<Issue[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+
+  // Данни за самия тикет
+  const [ticket, setTicket] = useState<{title: string, description: string, status: Status, priority: Priority, assigneeId: number, updatedAt: string} | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
   const [isDeleted, setIsDeleted] = useState(false);
@@ -36,18 +48,58 @@ export default function Ticket() {
   const [usersList, setUsersList] = useState<DbUser[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Стейтове за управление на inline-редакцията
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [editTitleValue, setEditTitleValue] = useState("");
+  const [isEditingDesc, setIsEditingDesc] = useState(false);
+  const [editDescValue, setEditDescValue] = useState("");
+
+  // Помощна функция за презареждане на билета в реално време при системни промени
+  const reloadTicketData = () => {
+    if (!id) return;
+    fetchTicketData(id)
+      .then(data => {
+        setTicket(prev => prev ? {
+          ...prev,
+          status: data.status || "To Do",
+          priority: data.priority || "Medium",
+          assigneeId: Number(data.assigneeId || 1),
+          updatedAt: data.updatedAt || ""
+        } : null);
+        setComments(data.comments || []);
+      })
+      .catch(err => console.error("Грешка при обновяване на хронологията:", err));
+  };
+
   useEffect(() => {
     if (!id) return;
     setLoading(true);
 
     const token = localStorage.getItem('token');
-    if (token) {
-        fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
-            .then(res => res.json())
-            .then(user => setCurrentUser({ name: `${user.firstName} ${user.lastName}`, avatar: `${user.firstName[0]}${user.lastName[0]}` }))
-            .catch(() => {});
+    if (!token) {
+      navigate('/login');
+      return;
     }
 
+    // 1. Извличане на профила за Header-а
+    fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(user => setHeaderUser(user))
+        .catch(() => {});
+
+    // 2. Извличане на всички задачи за търсачката в Header-а
+    fetch('/api/issues', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => { if (Array.isArray(data)) setAllIssues(data); })
+        .catch(() => {});
+
+    // 3. Извличане на нотификациите за камбанката в Header-а
+    fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } })
+        .then(res => res.json())
+        .then(data => { if (Array.isArray(data)) setNotifications(data); })
+        .catch(() => {});
+
+    // 4. Извличане на основните данни за билета и списъка с потребители
     Promise.all([fetchTicketData(id), fetchAllUsers()])
       .then(([data, users]) => {
         setUsersList(users);
@@ -56,8 +108,11 @@ export default function Ticket() {
           description: data.description || "Няма описание.",
           status: data.status || "To Do",
           priority: data.priority || "Medium",
-          assigneeId: Number(data.assigneeId || 1)
+          assigneeId: Number(data.assigneeId || 1),
+          updatedAt: data.updatedAt || ""
         });
+        setEditTitleValue(data.title);
+        setEditDescValue(data.description || "Няма описание.");
         setComments(data.comments || []);
         setLoading(false);
       })
@@ -65,7 +120,53 @@ export default function Ticket() {
         setErrorMessage(err.message);
         setLoading(false);
       });
-  }, [id]);
+  }, [id, navigate]);
+
+  // Запис на редактираното заглавие (Title)
+  const handleSaveTitle = () => {
+    if (!id || !ticket || !editTitleValue.trim()) {
+      setIsEditingTitle(false);
+      return;
+    }
+    if (editTitleValue === ticket.title) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    updateTicketField(id, 'title', editTitleValue.trim())
+      .then(() => {
+        setTicket(prev => prev ? { ...prev, title: editTitleValue.trim() } : null);
+        setIsEditingTitle(false);
+        reloadTicketData(); // Презареждаме за нов служебен коментар в историята
+      })
+      .catch(err => {
+        setErrorMessage(err.message || "Грешка при обновяване на заглавието.");
+        setIsEditingTitle(false);
+      });
+  };
+
+  // Запис на редактираното описание (Description)
+  const handleSaveDescription = () => {
+    if (!id || !ticket) {
+      setIsEditingDesc(false);
+      return;
+    }
+    if (editDescValue === ticket.description) {
+      setIsEditingDesc(false);
+      return;
+    }
+
+    updateTicketField(id, 'description', editDescValue.trim())
+      .then(() => {
+        setTicket(prev => prev ? { ...prev, description: editDescValue.trim() } : null);
+        setIsEditingDesc(false);
+        reloadTicketData(); // Презареждаме за нов служебен коментар в историята
+      })
+      .catch(err => {
+        setErrorMessage(err.message || "Грешка при обновяване на описанието.");
+        setIsEditingDesc(false);
+      });
+  };
 
   const handleStatusChange = (newStatus: Status) => {
     if (!ticket || !id) return;
@@ -73,22 +174,22 @@ export default function Ticket() {
 
     updateTicketField(id, 'status', newStatus)
       .then((res) => {
-        if (res && (res.error || res.success === false)) {
+        if (res && res.success === false) {
           setErrorMessage(res.message);
         } else {
-          setTicket(prev => prev ? { ...prev, status: newStatus } : null);
+          reloadTicketData();
         }
       })
-      .catch(err => console.error(err));
+      .catch(err => {
+        setErrorMessage(err.message || "Неуспешна промяна на статуса.");
+      });
   };
 
   const handlePriorityChange = (newPriority: Priority) => {
     if (!ticket || !id) return;
-    
-    // ВЕЧЕ ПОДАВАМЕ 'id'
     updateTicketField(id, 'priority', newPriority)
       .then(() => {
-        setTicket(prev => prev ? { ...prev, priority: newPriority } : null);
+        reloadTicketData();
       })
       .catch(err => console.error(err));
   };
@@ -97,13 +198,12 @@ export default function Ticket() {
     if (!ticket || !id) return;
     const dbValue = Number(selectedId);
 
-    // ВЕЧЕ ПОДАВАМЕ 'id'
     updateTicketField(id, 'assignee', dbValue)
       .then((res) => {
         if (res && (res.error || res.success === false)) {
           setErrorMessage(res.message);
         } else {
-          setTicket(prev => prev ? { ...prev, assigneeId: dbValue } : null);
+          reloadTicketData();
         }
       })
       .catch(err => console.error("Грешка при запис на потребител:", err));
@@ -111,10 +211,11 @@ export default function Ticket() {
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
-    // Добавяме проверка за currentUser
-    if (!newCommentText.trim() || !id || !currentUser) return; 
+    if (!newCommentText.trim() || !id || !headerUser) return; 
 
-    addTicketComment(id, newCommentText, currentUser.name)
+    const authorFullName = `${headerUser.firstName} ${headerUser.lastName}`;
+
+    addTicketComment(id, newCommentText, authorFullName)
       .then(res => {
         const savedComment = res.comment || res;
         setComments(prev => [...prev, savedComment]);
@@ -122,46 +223,35 @@ export default function Ticket() {
       })
       .catch(err => console.error("Грешка при добавяне на коментар:", err));
   };
+
+  if (loading) {
+    return <div className="mp-app-container"><div>Loading ticket details...</div></div>;
+  }
+
   if (isDeleted) {
     return (
-      <div className="tk-body-override">
-        <div className="tk-flex-align tk-justify-center" style={{ height: '100vh' }}>
+      <div className="mp-app-container">
+        <div className="mp-flex-center" style={{ height: '100vh', justifyContent: 'center' }}>
           <h1 style={{ fontSize: '24px', fontWeight: 'bold', color: 'var(--tk-danger)' }}>Issue was successfully deleted.</h1>
         </div>
       </div>
     );
   }
 
-  if (loading || !ticket) {
-    return (
-      <div className="tk-body-override">
-        <div style={{ padding: '24px', fontFamily: 'sans-serif', color: 'white' }}>Зареждане на задачата...</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="tk-body-override">
-      <nav className="tk-top-nav">
-          <div className="tk-flex-align">
-              <span className="tk-text-blue font-bold" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>🎯 BugTracker</span>
-              <input type="text" className="tk-search-bar" placeholder="Search issues..." />
-          </div>
-          <div className="tk-nav-actions">
-              <button className="tk-btn-dark" onClick={() => navigate('/')}>Dashboard</button>
-              <div className="tk-avatar-small tk-black">{currentUser?.avatar || 'U'}</div>
-          </div>
-      </nav>
+    <div className="mp-app-container">
+      {headerUser && (
+        <Header 
+          currentUser={headerUser}
+          issues={allIssues}
+          notifications={notifications}
+          setNotifications={setNotifications}
+          onSelectIssue={() => {}}
+          onOpenModal={() => navigate('/')}
+        />
+      )}
 
       <div className="tk-app-container-ticket">
-          <aside className="tk-sidebar-nav">
-              <h3>Navigation</h3>
-              <ul>
-                  <li className="tk-active" onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>📋 Issues</li>
-                  <li onClick={() => navigate('/')} style={{ cursor: 'pointer' }}>📊 Dashboard</li>
-              </ul>
-          </aside>
-
           <main className="tk-main-content">
               <button className="tk-btn-back" onClick={() => navigate('/')}>← Back to project</button>
               
@@ -172,85 +262,163 @@ export default function Ticket() {
               )}
 
               <div className="tk-title-row">
-                  <div className="tk-icon-alert">!</div>
-                  <div>
-                      <h1>{ticket.title}</h1>
-                      <div className="tk-ticket-id">{id} • Syncing with data.db</div>
+                  <div style={{ flex: 1 }}>
+                      {/* INLINE РЕДАКЦИЯ НА ЗАГЛАВИЕТО (TITLE) */}
+                      {isEditingTitle ? (
+                        <input 
+                          type="text"
+                          className="mp-form-input"
+                          style={{ fontSize: '1.75rem', fontWeight: 700, padding: '4px 8px' }}
+                          value={editTitleValue}
+                          onChange={(e) => setEditTitleValue(e.target.value)}
+                          onBlur={handleSaveTitle}
+                          onKeyDown={(e) => { if (e.key === 'Enter') handleSaveTitle(); }}
+                          autoFocus
+                        />
+                      ) : (
+                        <h1 
+                          className="mp-page-title tk-editable" 
+                          style={{ fontSize: '1.75rem', cursor: 'pointer' }}
+                          onClick={() => setIsEditingTitle(true)}
+                          title="Кликнете, за да редактирате заглавието"
+                        >
+                          {ticket?.title}
+                        </h1>
+                      )}
+                      <div className="tk-ticket-id" style={{ marginTop: '4px' }}>{id}</div>
                   </div>
               </div>
 
               <div className="tk-badges">
                   <span className="tk-badge tk-flex-align">
-                     Status: <strong className="tk-text-blue">{ticket.status}</strong>
+                     Status: <strong className="tk-text-blue" style={{ marginLeft: '4px' }}>{ticket?.status}</strong>
                   </span>
-                  <span className="tk-badge">Priority: <strong>{ticket.priority}</strong></span>
+                  <span className="tk-badge">Priority: <strong style={{ marginLeft: '4px' }}>{ticket?.priority}</strong></span>
+              </div>
+
+              {/* Информация за последна промяна в стила на приложението */}
+              <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: '1rem', height: '1rem' }}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+                <span>Последна промяна: <strong>{ticket?.updatedAt}</strong></span>
               </div>
 
               <div className="tk-layout-grid">
                   <div>
-                      <h3>Description</h3>
-                      <p className="tk-description-text tk-mt-2">
-                          {ticket.description}
-                      </p>
+                      <h3 style={{ fontWeight: 600, color: '#111827' }}>Description</h3>
+                      
+                      {/* INLINE РЕДАКЦИЯ НА ОПИСАНИЕТО (DESCRIPTION) */}
+                      {isEditingDesc ? (
+                        <textarea
+                          className="mp-form-input tk-mt-2"
+                          style={{ minHeight: '120px', resize: 'none', padding: '8px', lineHeight: '1.6', fontFamily: 'inherit' }}
+                          value={editDescValue}
+                          onChange={(e) => setEditDescValue(e.target.value)}
+                          onBlur={handleSaveDescription}
+                          autoFocus
+                        />
+                      ) : (
+                        <p 
+                          className="tk-description-text tk-mt-2 tk-editable" 
+                          style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px' }}
+                          onClick={() => setIsEditingDesc(true)}
+                          title="Кликнете, за да редактирате описанието"
+                        >
+                          {ticket?.description}
+                        </p>
+                      )}
 
                       <hr className="tk-divider" />
 
                       <div className="tk-comments-section">
-                          <h3>Discussion ({comments.length})</h3>
+                          <h3 style={{ fontWeight: 600, color: '#111827' }}>Discussion ({comments.length})</h3>
                           
                           <div className="tk-comments-list">
                               {comments.map((comment) => {
+                                  // Проверяваме дали коментарът е системен лог
+                                  const isSystem = comment.authorId === 0 || comment.content?.startsWith('[SYSTEM]');
+                                  
+                                  // Почистваме текста от префикса за интерфейса
+                                  const cleanContent = isSystem 
+                                    ? comment.content.replace('[SYSTEM]', '').trim() 
+                                    : comment.content || comment.text;
+
                                   const matchingUser = usersList.find(u => u.id === comment.authorId);
                                   const authorName = matchingUser ? `${matchingUser.firstName} ${matchingUser.lastName}` : "Unknown User";
                                   const initials = getInitials(authorName);
 
+                                  // Дизайн за служебните коментари (Системен лог без емоджита)
+                                  if (isSystem) {
+                                    return (
+                                      <div key={comment.id} className="tk-system-log-card">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
+                                          <span>System Log</span>
+                                          <span>{cleanContent}</span>
+                                        </div>
+                                        <div>{comment.createdAt || 'Just now'}</div>
+                                      </div>
+                                    );
+                                  }
+
+                                  // Дизайн за редовен потребителски коментар
                                   return (
-                                      <div key={comment.id} className="tk-comment-card">
+                                      <div key={comment.id} className="tk-comment-card" style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                                           <div className="tk-comment-header">
-                                              <div className={`tk-avatar-small ${comment.color || 'tk-blue'}`}>{initials}</div>
+                                              <div className="mp-avatar-circle" style={{ background: '#3b82f6', color: 'white', fontWeight: 600, fontSize: '0.8rem', width: '2rem', height: '2rem' }}>
+                                                {initials}
+                                              </div>
                                               <div>
-                                                  <span className="tk-author">{authorName}</span>
-                                                  <div className="tk-date">{comment.createdAt || comment.date || 'Just now'}</div>
+                                                  <span className="tk-author" style={{ color: '#111827' }}>{authorName}</span>
+                                                  <div className="tk-date">{comment.createdAt || 'Just now'}</div>
                                               </div>
                                           </div>
-                                          <p>{comment.content || comment.text}</p>
+                                          <p style={{ color: '#374151', marginTop: '8px', fontSize: '0.925rem' }}>{cleanContent}</p>
                                       </div>
                                   );
                               })}
                           </div>
 
-                          <div className="tk-add-comment-box tk-mt-4">
+                          <div className="tk-add-comment-box tk-mt-4" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
                               <form onSubmit={handleAddComment}>
                                   <textarea 
+                                    className="mp-form-input"
+                                    style={{ minHeight: '100px', backgroundColor: '#ffffff', border: '1px solid #d1d5db', resize: 'none' }}
                                     placeholder="Add a comment or feedback..."
                                     value={newCommentText}
                                     onChange={(e) => setNewCommentText(e.target.value)}
                                   />
-                                  <button type="submit" className="tk-btn-primary tk-mt-2">Comment</button>
+                                  <button type="submit" className="mp-btn-primary-submit tk-mt-2">Comment</button>
                               </form>
                           </div>
                       </div>
                   </div>
 
                   <div>
-                      <div className="tk-details-card">
+                      <div className="tk-details-card" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
                           <div className="tk-field">
-                              <label>Status Lifecycle</label>
-                              <select className="tk-dropdown-trigger" value={ticket.status} onChange={(e) => handleStatusChange(e.target.value as Status)}>
-                                  {optionsStatus.map(s => <option key={s} value={s}>{s}</option>)}
+                              <label className="mp-form-label mp-font-bold">Status Lifecycle</label>
+                              <select 
+                                className="mp-form-select" 
+                                value={ticket?.status} 
+                                onChange={(e) => handleStatusChange(e.target.value as Status)}
+                              >
+                                  {ticket && allowedNextStatus[ticket.status].map(s => (
+                                      <option key={s} value={s}>{s}</option>
+                                  ))}
                               </select>
                           </div>
 
                           <div className="tk-field">
-                              <label>Priority</label>
-                              <select className="tk-dropdown-trigger" value={ticket.priority} onChange={(e) => handlePriorityChange(e.target.value as Priority)}>
+                              <label className="mp-form-label mp-font-bold">Priority</label>
+                              <select className="mp-form-select" value={ticket?.priority} onChange={(e) => handlePriorityChange(e.target.value as Priority)}>
                                   {optionsPriority.map(p => <option key={p} value={p}>{p}</option>)}
                               </select>
                           </div>
 
                           <div className="tk-field">
-                              <label>Assignee</label>
-                              <select className="tk-dropdown-trigger" value={ticket.assigneeId} onChange={(e) => handleAssigneeChange(e.target.value)}>
+                              <label className="mp-form-label mp-font-bold">Assignee</label>
+                              <select className="mp-form-select" value={ticket?.assigneeId} onChange={(e) => handleAssigneeChange(e.target.value)}>
                                   {usersList.map(u => (
                                       <option key={u.id} value={u.id}>{u.firstName} {u.lastName}</option>
                                   ))}
@@ -258,7 +426,9 @@ export default function Ticket() {
                           </div>
                       </div>
                       
-                      <button onClick={() => setIsDeleted(true)} className="tk-btn-danger tk-w-full tk-mt-4">🗑 Delete Issue</button>
+                      <button onClick={() => setIsDeleted(true)} className="tk-btn-danger tk-w-full tk-mt-4" style={{ borderRadius: '0.5rem', padding: '0.625rem' }}>
+                        🗑 Delete Issue
+                      </button>
                   </div>
               </div>
           </main>

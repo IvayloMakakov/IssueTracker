@@ -1,19 +1,16 @@
+// frontend/src/loginApi.ts
 export interface User {
   firstName: string;
   lastName: string;
   email: string;
 }
 
-export interface AuthSuccess extends User {
-  message: string;
-  token: string;
+export interface AuthResponse {
+  success: boolean;
+  token?: string;
+  error?: string; // Съобщението за грешка при несъответствие
+  user?: User;
 }
-
-export interface AuthError {
-  error: string;
-}
-
-export type AuthResponse = AuthSuccess | AuthError;
 
 async function postJSON<T>(url: string, body: unknown): Promise<{ ok: boolean; data: T }> {
   const res = await fetch(url, {

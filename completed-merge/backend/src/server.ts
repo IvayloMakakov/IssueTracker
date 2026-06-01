@@ -1,12 +1,21 @@
 // backend/server.ts
 import 'dotenv/config';
-import express, { Request, Response } from 'express';
+import express, { Request, Response, NextFunction } from 'express';
 import bcrypt from 'bcrypt';
 import cors from 'cors';
 import jwt from 'jsonwebtoken';
 import { open, Database } from 'sqlite';
 import sqlite3 from 'sqlite3';
 import path from 'path';
+
+// Разширяваме Express интерфейса, за да можем безопасно да пренасяме userId през middleware-а
+declare global {
+  namespace Express {
+    interface Request {
+      userId?: number;
+    }
+  }
+}
 
 const app = express();
 const PORT = 3000;
@@ -16,146 +25,162 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 app.use(cors());
 app.use(express.json());
 
-// Инициализация на променлива за връзка с базата данни
 let db: Database<sqlite3.Database, sqlite3.Statement>;
 
-// Функция за свързване с SQLite файла data.db
+// Инициализация на връзката с SQLite базата данни
 async function initDatabase() {
   db = await open({
-    filename: path.join(__dirname, 'data.db'), // Път до твоя data.db файл
+    filename: path.join(__dirname, 'data.db'),
     driver: sqlite3.Database
   });
   console.log('Successfully connected to SQLite database (data.db)');
 }
 
 // ==========================================
-// --- ЧАСТ 1: АВТЕНТИКАЦИЯ (AUTH) ---
+// --- МИДЪЛУЕР ЗА СИГУРНОСТ (MIDDLEWARE) ---
 // ==========================================
 
+const requireAuth = (req: Request, res: Response, next: NextFunction): any => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return res.status(401).json({ error: 'Невалиден или липсващ токен. Моля, влезте в профила си.' });
+  }
+
+  const token = authHeader.split(' ')[1];
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; email: string };
+    req.userId = decoded.id; // Закачаме ID-то към заявката за следващите ендпоинти
+    next();
+  } catch (error) {
+    console.error('JWT Verification Error:', error);
+    return res.status(401).json({ error: 'Сесията е изтекла или е невалидна. Влезте отново.' });
+  }
+};
+
+// ==========================================
+// --- ЧАСТ 1: АВТЕНТИКАЦИЯ (AUTH) ---
+// ==========================================
+// ОПРАВЕНО: Грешките вече се връщат в ключ "error" за пълна консистентност с фронтенда
+// backend/server.ts
 app.post('/api/register', async (req: Request, res: Response): Promise<any> => {
   const { firstName, lastName, email, password } = req.body;
 
-  if (!firstName || !lastName || !email || !password) {
-    return res.status(400).json({ success: false, message: 'Всички полета са задължителни' });
+  // Случай при празни полета
+  if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
+    return res.json({ success: false, error: 'Всички полета са задължителни!' });
   }
 
   try {
-    // Проверка за съществуващ потребител
-    const existingUser = await db.get('SELECT email FROM User WHERE email = ?', [email]);
+    const existingUser = await db.get('SELECT email FROM User WHERE email = ?', [email.toLowerCase().trim()]);
+    
+    // СЛУЧАЙ: Потребител с този имейл вече съществува
     if (existingUser) {
-      return res.status(400).json({ success: false, message: 'Потребителят вече съществува' });
+      return res.json({ success: false, error: 'Потребител с този имейл адрес вече съществува!' });
     }
 
+    // Хеширане на паролата и запис
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    
-    // Запис в SQLite таблицата User
     await db.run(
       'INSERT INTO User (firstName, lastName, email, passwordHash) VALUES (?, ?, ?, ?)',
-      [firstName, lastName, email, passwordHash]
+      [firstName.trim(), lastName.trim(), email.toLowerCase().trim(), passwordHash]
     );
 
-    res.status(201).json({ success: true, message: 'Потребителят е регистриран успешно' });
+    // Успешна регистрация
+    res.status(201).json({ success: true, message: 'Потребителят е регистриран успешно!' });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Вътрешна сървърна грешка' });
+    console.error('Register Error:', error);
+    res.json({ success: false, error: 'Вътрешна сървърна грешка при регистрация!' });
   }
 });
 
+// backend/server.ts
 app.post('/api/login', async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
 
+  // Случай при празни полета
+  if (!email?.trim() || !password?.trim()) {
+    return res.json({ success: false, error: 'Моля, въведете имейл адрес и парола!' });
+  }
+
   try {
-    const user = await db.get('SELECT * FROM User WHERE email = ?', [email]);
+    const user = await db.get('SELECT * FROM User WHERE email = ?', [email.toLowerCase().trim()]);
+    
+    // СЛУЧАЙ 2: Такъв имейл не съществува в системата
     if (!user) {
-      return res.status(400).json({ success: false, message: 'Невалиден имейл или парола' });
+      return res.json({ success: false, error: 'Не съществува регистриран потребител с този имейл адрес!' });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
+    
+    // СЛУЧАЙ 3: Паролата е грешна, но имейлът съществува
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Невалиден имейл или парола' });
+      return res.json({ success: false, error: 'Въведената парола е невалидна! Моля, опитайте отново.' });
     }
     
+    // СЛУЧАЙ 1: Всичко съответства и той се логва успешно
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
+    
     res.json({
       success: true,
       token,
-      user: { firstName: user.firstName, lastName: user.lastName, email: user.email }
+      user: { id: user.id, firstName: user.firstName, lastName: user.lastName, email: user.email }
     });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ success: false, message: 'Грешка при вход' });
+    console.error('Login Error:', error);
+    res.json({ success: false, error: 'Възникна вътрешна грешка в сървъра при вход!' });
   }
 });
 
-// Ендпоинт за проверка на текущия потребител чрез JWT токен
-app.get('/api/me', async (req: Request, res: Response): Promise<any> => {
+app.get('/api/me', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
-    // 1. Взимаме токена от Authorization хедъра (Bearer <token>)
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({ error: 'Невалиден или липсващ токен' });
-    }
-
-    const token = authHeader.split(' ')[1];
-
-    // 2. Верифицираме токена с нашия таен ключ
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number; email: string };
-
-    // 3. Търсим потребителя в базата данни по ID
-    const user = await db.get('SELECT id, firstName, lastName, email FROM User WHERE id = ?', [decoded.id]);    
-    
+    const user = await db.get('SELECT id, firstName, lastName, email FROM User WHERE id = ?', [req.userId]);    
     if (!user) {
       return res.status(404).json({ error: 'Потребителят не е намерен' });
     }
-
-    // 4. Връщаме данните на потребителя
     res.json(user);
-
   } catch (error) {
-    console.error('Грешка при верификация на токен:', error);
-    res.status(401).json({ error: 'Сесията е изтекла или е невалидна' });
+    console.error('Get Profile Error:', error);
+    res.status(500).json({ error: 'Грешка при извличане на профила' });
   }
 });
 
-app.put('/api/me', async (req: Request, res: Response): Promise<any> => {
-  try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) return res.status(401).json({ error: 'Няма токен' });
-    
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+app.put('/api/me', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  const { firstName, lastName, currentPassword, newPassword } = req.body;
 
-    const { firstName, lastName, currentPassword, newPassword } = req.body;
-    
+  if (!firstName?.trim() || !lastName?.trim()) {
+    return res.status(400).json({ error: 'Името и фамилията не могат да бъдат празни' });
+  }
+
+  try {
     if (newPassword) {
-      // 1. Вземаме текущия хеш от базата данни
-      const user = await db.get('SELECT passwordHash FROM User WHERE id = ?', [decoded.id]);
+      if (!currentPassword) {
+        return res.status(400).json({ error: 'Въведете текущата си парола, за да я промените' });
+      }
+
+      const user = await db.get('SELECT passwordHash FROM User WHERE id = ?', [req.userId]);
       if (!user) return res.status(404).json({ error: 'Потребителят не е намерен' });
 
-      // 2. Проверяваме дали въведената текуща парола е вярна
       const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
       if (!isMatch) {
         return res.status(400).json({ error: 'Въведената текуща парола е грешна!' });
       }
 
-      // 3. Хешираме и записваме новата
       const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
       await db.run(
         'UPDATE User SET firstName = ?, lastName = ?, passwordHash = ? WHERE id = ?',
-        [firstName, lastName, newPasswordHash, decoded.id]
+        [firstName.trim(), lastName.trim(), newPasswordHash, req.userId]
       );
     } else {
-      // Само смяна на имената, ако не е въведена нова парола
       await db.run(
         'UPDATE User SET firstName = ?, lastName = ? WHERE id = ?',
-        [firstName, lastName, decoded.id]
+        [firstName.trim(), lastName.trim(), req.userId]
       );
     }
     
     res.json({ success: true });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Грешка при запис в базата данни' });
+    console.error('Update Profile Error:', error);
+    res.status(500).json({ error: 'Грешка при обновяване на профила' });
   }
 });
 
@@ -165,112 +190,152 @@ app.put('/api/me', async (req: Request, res: Response): Promise<any> => {
 
 app.get('/api/issues', async (req: Request, res: Response) => {
   try {
+    const authHeader = req.headers.authorization;
+    let userId = null;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
+        userId = decoded.id;
+      } catch (e) {
+        // Остава null при невалиден токен (публичен достъп)
+      }
+    }
+
     const rows = await db.all(`
-      SELECT i.*, u.firstName, u.lastName 
+      SELECT i.*, u.firstName, u.lastName,
+             CASE WHEN uf.userId IS NOT NULL THEN 1 ELSE 0 END as isFav
       FROM Issue i
       LEFT JOIN User u ON i.assigneeId = u.id
-    `);
+      LEFT JOIN UserFavorite uf ON i.id = uf.issueId AND uf.userId = ?
+      ORDER BY i.id DESC
+    `, [userId]);
 
+    
     const formattedIssues = rows.map(row => {
-      const hasValidUser = row.firstName && row.lastName;
+  // Подсигуряваме правилно конвертиране, независимо дали датата е ISO низ или SQLite timestamp
+  const dateObj = new Date(row.updatedAt);
+  
+  // Проверяваме дали датата е валидна, преди да я форматираме
+  const formattedDate = !isNaN(dateObj.getTime())
+    ? dateObj.toLocaleString('bg-BG', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) + ' ч.'
+    : row.updatedAt; // Връщаме оригиналния запис като резервен вариант при аномалия
 
-      return {
-        id: row.displayId || `ISSUE-${row.id}`,
-        title: row.title,
-        type: row.type,
-        status: row.status,
-        priority: row.priority,
-        updatedAt: row.updatedAt,
-        isFavorite: !!row.isFavorite,
-        creatorId: row.creatorId, // ВАЖНО: Увери се, че този ред присъства!
-        assignee: (row.assigneeId && hasValidUser) ? {
-          name: `${row.firstName} ${row.lastName}`,
-          initial: `${row.firstName[0]}${row.lastName[0]}`.toUpperCase()
-        } : null
-      };
-    });
+  return {
+    id: row.displayId || `ISSUE-${row.id}`,
+    title: row.title,
+    type: row.type,
+    status: row.status,
+    priority: row.priority,
+    updatedAt: formattedDate, // ТУК подаваме вече красиво форматирания низ с час и минути
+    isFavorite: row.isFav === 1,
+    creatorId: row.creatorId,
+    assignee: row.assigneeId ? {
+      name: `${row.firstName} ${row.lastName}`,
+      initial: `${row.firstName[0]}${row.lastName[0]}`.toUpperCase()
+    } : null
+  };
+});
 
     res.json(formattedIssues);
   } catch (error) {
-    console.error('Грешка в /api/issues:', error);
+    console.error('Get Issues Error:', error);
     res.status(500).json({ error: 'Грешка при извличане на задачите' });
   }
 });
 
-app.post('/api/issues', async (req: Request, res: Response): Promise<any> => {
-  // 1. ИЗВЛИЧАМЕ И ВАЛИДИРАМЕ ТОКЕНА
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Няма токен' });
-
-  let creatorId: number;
-  try {
-    const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
-    creatorId = decoded.id; // 2. ТОВА Е РЕАЛНОТО ID НА ТЕКУЩИЯ ПОТРЕБИТЕЛ!
-  } catch (error) {
-    return res.status(401).json({ error: 'Невалиден или изтекъл токен' });
-  }
-
+app.post('/api/issues', requireAuth, async (req: Request, res: Response): Promise<any> => {
   const { title, description, type, priority, status, assigneeName } = req.body;
 
-  if (!title) {
+  if (!title?.trim()) {
     return res.status(400).json({ error: 'Заглавието е задължително поле!' });
   }
 
   try {
-    // 3. Намираме ID-то на потребителя, ако е избран изпълнител (Assignee)
     let assigneeId: number | null = null;
     if (assigneeName && assigneeName !== 'unassigned') {
-      const user = await db.get(
-        "SELECT id FROM User WHERE (firstName || ' ' || lastName) = ?", 
-        [assigneeName]
-      );
-      if (user) {
-        assigneeId = user.id;
-      }
+      const user = await db.get("SELECT id FROM User WHERE (firstName || ' ' || lastName) = ?", [assigneeName.trim()]);
+      if (user) assigneeId = user.id;
     }
 
-    // 4. Генерираме следващия displayId (напр. ISS-1, ISS-2...)
     const lastIssue = await db.get("SELECT displayId FROM Issue ORDER BY id DESC LIMIT 1");
     let nextId = 1;
-
     if (lastIssue && lastIssue.displayId) {
-      // Извличаме числото след "ISS-" (напр. от "ISS-8" взимаме 8)
       const lastNumber = parseInt(lastIssue.displayId.replace('ISS-', ''), 10);
-      if (!isNaN(lastNumber)) {
-        nextId = lastNumber + 1;
-      }
+      if (!isNaN(lastNumber)) nextId = lastNumber + 1;
     }
 
     const displayId = `ISS-${nextId}`;
-
     const nowIso = new Date().toISOString();
 
-    // 5. Записваме задачата с истинския creatorId
     await db.run(
       `INSERT INTO Issue (displayId, title, description, type, status, priority, creatorId, assigneeId, createdAt, updatedAt) 
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [displayId, title, description || "", type, status, priority, creatorId, assigneeId, nowIso, nowIso]
+      [displayId, title.trim(), description || "", type || "Task", status || "To Do", priority || "Medium", req.userId, assigneeId, nowIso, nowIso]
     );
 
-    const newIssue = {
-      id: displayId,
-      title,
-      type,
-      status,
-      priority,
-      assignee: assigneeName && assigneeName !== 'unassigned' ? {
-        name: assigneeName,
-        initial: assigneeName.split(' ').map((n: string) => n[0]).join('').toUpperCase()
-      } : null,
-      updatedAt: new Date().toLocaleDateString('bg-BG'),
-      isFavorite: false
-    };
+    // ТЕСТОВА ФУНКЦИЯ: Праща известие на СЕГАШНИЯ потребител при създаване на ново issue
+    await createNotification(
+      req.userId!,
+      'assignment',
+      'Успешно създадена задача',
+      `Вие успешно създадохте нова задача: ${displayId} - "${title.trim()}"`,
+      displayId
+    );
 
-    res.status(201).json(newIssue);
+    // Ако задачата е разпределена веднага на друг колега, пращаме известие и на него (Изискване 4)
+    if (assigneeId && assigneeId !== req.userId) {
+      await createNotification(
+        assigneeId,
+        'assignment',
+        'Назначена задача',
+        `Бяхте назначен като изпълнител на задача ${displayId}`,
+        displayId
+      );
+    }
+
+    res.status(201).json({ id: displayId, title, type, status, priority, creatorId: req.userId, assignee: assigneeName !== 'unassigned' ? { name: assigneeName, initial: assigneeName.split(' ').map((n: string) => n[0]).join('').toUpperCase() } : null, updatedAt: new Date().toLocaleDateString('bg-BG'), isFavorite: false });
   } catch (error) {
-    console.error('Грешка при създаване на задача:', error);
+    console.error('Create Issue Error:', error);
     res.status(500).json({ error: 'Неуспешно записване в базата данни' });
+  }
+});
+
+app.post('/api/issues/favorite', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  const { issueDisplayId } = req.body;
+
+  if (!issueDisplayId) {
+    return res.status(400).json({ error: 'Липсва идентификатор на задачата' });
+  }
+
+  try {
+    const issue = await db.get('SELECT id FROM Issue WHERE displayId = ?', [issueDisplayId]);
+    if (!issue) {
+      return res.status(404).json({ error: 'Задачата не е намерена' });
+    }
+
+    const existingFav = await db.get(
+      'SELECT * FROM UserFavorite WHERE userId = ? AND issueId = ?',
+      [req.userId, issue.id]
+    );
+
+    if (existingFav) {
+      await db.run('DELETE FROM UserFavorite WHERE userId = ? AND issueId = ?', [req.userId, issue.id]);
+      return res.json({ success: true, isFavorite: false });
+    } else {
+      await db.run('INSERT INTO UserFavorite (userId, issueId) VALUES (?, ?)', [req.userId, issue.id]);
+      return res.json({ success: true, isFavorite: true });
+    }
+  } catch (error) {
+    console.error('Favorite Toggle Error:', error);
+    return res.status(500).json({ error: 'Грешка при обработка на операцията' });
   }
 });
 
@@ -280,127 +345,284 @@ app.post('/api/issues', async (req: Request, res: Response): Promise<any> => {
 
 app.get('/api/users', async (req: Request, res: Response): Promise<any> => {
   try {
-    // Взимаме ID-то и имената на всички потребители за падащото меню
-    const users = await db.all('SELECT id, firstName, lastName FROM User');
+    const users = await db.all('SELECT id, firstName, lastName FROM User ORDER BY firstName ASC');
     res.json(users);
   } catch (error) {
-    console.error('Грешка при извличане на потребителите:', error);
-    res.status(500).json({ success: false, error: 'Грешка на сървъра' });
+    console.error('Get Users Error:', error);
+    res.status(500).json({ error: 'Грешка на сървъра при извличане на потребители' });
   }
 });
 
-// backend/server.ts
 app.get('/api/ticket', async (req: Request, res: Response): Promise<any> => {
-  const { id } = req.query; // Взимаме id-то от URL-а (Query параметр)
+  const { id } = req.query;
 
   if (!id) {
     return res.status(400).json({ error: 'Липсва идентификатор (id) на задачата' });
   }
 
   try {
-    // Вземаме конкретния билет по неговия displayId (напр. ISS-1)
     const ticket = await db.get('SELECT * FROM Issue WHERE displayId = ?', [id]);
-    
     if (!ticket) {
       return res.status(404).json({ error: 'Задачата не е намерена в базата данни' });
     }
 
-    // Взимаме коментарите, които принадлежат на това конкретно issueId
-    const comments = await db.all('SELECT * FROM Comment WHERE issueId = ?', [ticket.id]);
-    ticket.comments = comments;
+    // --- НОВО: Красиво форматиране на датата на последна промяна ---
+    const dateObj = new Date(ticket.updatedAt);
+    if (!isNaN(dateObj.getTime())) {
+      ticket.updatedAt = dateObj.toLocaleString('bg-BG', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+      }) + ' ч.';
+    }
+    // -------------------------------------------------------------
+
+    const comments = await db.all('SELECT * FROM Comment WHERE issueId = ? ORDER BY id ASC', [ticket.id]);
+    
+    // Форматираме датите на коментарите консистентно
+    ticket.comments = comments.map(c => {
+      const cDate = new Date(c.createdAt);
+      return {
+        ...c,
+        createdAt: !isNaN(cDate.getTime()) 
+          ? cDate.toLocaleString('bg-BG', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit'
+            }) + ' ч.'
+          : c.createdAt
+      };
+    });
 
     res.json(ticket);
   } catch (error) {
-    console.error('Грешка при извличане на билета:', error);
-    res.status(500).json({ error: 'Грешка при извличане на билета' });
+    console.error('Get Ticket Error:', error);
+    res.status(500).json({ error: 'Грешка при извличане на детайлите на билета' });
   }
 });
 
-app.patch('/api/ticket', async (req: Request, res: Response): Promise<any> => {
-  // 1. ВЕЧЕ ОЧАКВАМЕ 'id' В ЗАЯВКАТА
+app.patch('/api/ticket', requireAuth, async (req: Request, res: Response): Promise<any> => {
   let { id, field, value } = req.body; 
-
-  // 2. ДОБАВЯМЕ 'isFavorite' В ПОЗВОЛЕНИТЕ ПОЛЕТА
-  const allowedFields = ['title', 'description', 'status', 'priority', 'assignee', 'assigneeId', 'isFavorite'];
-  if (!allowedFields.includes(field)) {
-    return res.status(400).json({ success: false, message: 'Невалидно поле за обновяване' });
-  }
+  if (field === 'assignee') field = 'assigneeId';
 
   try {
-    if (field === 'assignee') {
-      field = 'assigneeId';
-      value = (value === "" || value === undefined) ? null : Number(value);
-    }
+    const ticket = await db.get('SELECT * FROM Issue WHERE displayId = ?', [id]);
+    if (!ticket) return res.status(404).json({ success: false, message: 'Задачата не е намерена' });
 
-    // 3. ТЪРСИМ ЗАДАЧАТА ПО displayId (напр. ISS-1), А НЕ С LIMIT 1
-    const ticket = await db.get('SELECT id, status FROM Issue WHERE displayId = ?', [id]);
-    
-    if (!ticket) {
-      return res.status(404).json({ success: false, message: 'Задачата не е намерена' });
-    }
+    const currentUserId = req.userId!;
+    const oldAssigneeId = ticket.assigneeId;
 
-    if (field === 'status' && value === 'Done') {
-      const currentTicket = await db.get('SELECT assigneeId FROM Issue WHERE id = ?', [ticket.id]);
-      if (!currentTicket || currentTicket.assigneeId === null) {
-        return res.status(400).json({ error: 'Error', message: 'Не можете да завършите задача без изпълнител!' });
+    // Взимаме имената на потребителя, който прави промяната в момента (Изискване 2)
+    const actor = await db.get('SELECT firstName, lastName FROM User WHERE id = ?', [currentUserId]);
+    const actorName = actor ? `${actor.firstName} ${actor.lastName}` : "Някой";
+    let systemCommentText = "";
+
+    if (field === 'status') {
+      if (ticket.status !== value) {
+        // БЕЗ ЕМОДЖИТА: Използваме ясен структуриран текст с префикс
+        systemCommentText = `[SYSTEM] Потребител ${actorName} промени статуса на "${value}".`;
+        const usersToNotify = await getInterestedParties(ticket.id, currentUserId);
+        for (const uId of usersToNotify) {
+          await createNotification(uId, 'status', 'Промяна на статус', `Статусът на задача ${id} беше променен на "${value}"`, id);
+        }
+      }
+    } else if (field === 'priority') {
+      if (ticket.priority !== value) {
+        systemCommentText = `[SYSTEM] Потребител ${actorName} промени приоритета на "${value}".`;
+        const usersToNotify = await getInterestedParties(ticket.id, currentUserId);
+        for (const uId of usersToNotify) {
+          await createNotification(uId, 'status', 'Промяна на приоритет', `Приоритетът на задача ${id} беше променен на "${value}"`, id);
+        }
+      }
+    } else if (field === 'assigneeId') {
+      const newAssigneeId = value === "" ? null : Number(value);
+      if (oldAssigneeId !== newAssigneeId) {
+        if (newAssigneeId) {
+          const newAssignee = await db.get('SELECT firstName, lastName FROM User WHERE id = ?', [newAssigneeId]);
+          const targetName = newAssignee ? `${newAssignee.firstName} ${newAssignee.lastName}` : "Unknown";
+          systemCommentText = `[SYSTEM] Потребител ${actorName} назначи задачата на "${targetName}".`;
+        } else {
+          systemCommentText = `[SYSTEM] Потребител ${actorName} премахна изпълнителя на задачата (Unassigned).`;
+        }
+
+        // Известия
+        if (oldAssigneeId && oldAssigneeId !== currentUserId) {
+          await createNotification(oldAssigneeId, 'assignment', 'Премахнат изпълнител', `Вече не сте изпълнител на задача ${id}`, id);
+        }
+        if (newAssigneeId && newAssigneeId !== currentUserId) {
+          await createNotification(newAssigneeId, 'assignment', 'Назначена задача', `Бяхте назначен като изпълнител на задача ${id}`, id);
+        }
+        if (ticket.creatorId && ticket.creatorId !== currentUserId && ticket.creatorId !== newAssigneeId) {
+          await createNotification(ticket.creatorId, 'assignment', 'Нов изпълнител', `Задача ${id} има нов назначен изпълнител.`, id);
+        }
       }
     }
 
-    await db.run(
-      `UPDATE Issue SET ${field} = ? WHERE id = ?`,
-      [value, ticket.id]
-    );
+    // Изпълнение на реалния запис на промяната по тикета
+    const nowIso = new Date().toISOString();
+    await db.run(`UPDATE Issue SET ${field} = ?, updatedAt = ? WHERE id = ?`, [value === "" ? null : value, nowIso, ticket.id]);
 
-    res.json({ success: true, message: `Полето ${field} беше обновено успешно.` });
+    // Записваме системния коментар с authorId = 0 (Системен лог)
+    if (systemCommentText) {
+      await db.run(
+        'INSERT INTO Comment (content, authorId, issueId, createdAt) VALUES (?, 0, ?, ?)',
+        [systemCommentText, ticket.id, nowIso]
+      );
+    }
+
+    res.json({ success: true, message: `Полето ${field} беше обновено.` });
   } catch (error) {
-    console.error('Грешка при обновяване на полето в базата:', error);
-    res.status(500).json({ success: false, message: 'Грешка на сървъра при обновяване' });
+    console.error('PATCH ticket error:', error);
+    res.status(500).json({ success: false, message: 'Грешка на сървъра' });
   }
 });
 
-// Добавяне на коментар в базата данни
-app.post('/api/ticket/comments', async (req: Request, res: Response) => {
-  const { text, authorId, issueId } = req.body;
-  try {
-    // Взимаме първото issue, ако фронтендът не е подал конкретно issueId
-    let targetIssueId = issueId;
-    if (!targetIssueId) {
-      const currentTicket = await db.get('SELECT id FROM Issue LIMIT 1');
-      targetIssueId = currentTicket ? currentTicket.id : 1;
-    }
+app.post('/api/ticket/comments', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  const { text, issueId } = req.body;
 
-    // Записваме с правилното числово authorId и issueId
+  if (!text?.trim() || !issueId) {
+    return res.status(400).json({ error: 'Коментарът не може да бъде празен' });
+  }
+
+  try {
+    const ticket = await db.get('SELECT id, displayId, creatorId, assigneeId FROM Issue WHERE displayId = ?', [issueId]);
+    if (!ticket) return res.status(404).json({ error: 'Задачата не съществува.' });
+
+    const now = new Date();
+    const nowIso = now.toISOString();
+
     const result = await db.run(
-      'INSERT INTO Comment (content, authorId, issueId, createdAt) VALUES (?, ?, ?, CURRENT_TIMESTAMP)',
-      [text, authorId || 1, targetIssueId]
+      'INSERT INTO Comment (content, authorId, issueId, createdAt) VALUES (?, ?, ?, ?)',
+      [text.trim(), req.userId, ticket.id, nowIso]
     );
+
+    // Красив формат за UI веднага без рефреш (Изискване 1)
+    const formattedDate = now.toLocaleString('bg-BG', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    }) + ' ч.';
     
     res.json({ 
       success: true, 
       comment: { 
         id: result.lastID, 
-        content: text, 
-        authorId: authorId || 1, 
-        issueId: targetIssueId,
-        createdAt: new Date().toLocaleDateString('bg-BG') 
+        content: text.trim(), 
+        authorId: req.userId, 
+        issueId: ticket.id,
+        createdAt: formattedDate // Връщаме форматираната дата с час веднага
       } 
     });
+
+    // Известяване на свързаните лица (съществуващата ти логика)
+    const usersToNotify = await getInterestedParties(ticket.id, req.userId!);
+    for (const uId of usersToNotify) {
+      await createNotification(uId, 'comment', 'Нов коментар', `Беше добавен нов коментар към задача ${ticket.displayId}`, ticket.displayId);
+    }
   } catch (error) {
-    console.error('Грешка при запис на коментар:', error);
-    res.status(500).json({ error: 'Грешка при запис на коментара' });
+    console.error('Create Comment Error:', error);
+    res.status(500).json({ error: 'Вътрешна грешка' });
   }
 });
+
+
+// ================================================
+// --- ПОМОЩНА ФУНКЦИЯ ЗА СЪЗДАВАНЕ НА ИЗВЕСТИЯ ---
+// ================================================
+
+async function createNotification(userId: number, type: string, title: string, desc: string, targetId: string) {
+  try {
+    await db.run(
+      `INSERT INTO Notification (userId, type, title, desc, targetId, unread, createdAt) 
+       VALUES (?, ?, ?, ?, ?, 1, datetime('now'))`,
+      [userId, type, title, desc, targetId]
+    );
+  } catch (err) {
+    console.error('Failed to insert notification into DB:', err);
+  }
+}
+
+// Помощна функция за намиране на всички заинтересовани лица по задача
+async function getInterestedParties(issueId: number, currentUserId: number): Promise<number[]> {
+  const issue = await db.get('SELECT creatorId, assigneeId FROM Issue WHERE id = ?', [issueId]);
+  const ids = new Set<number>();
+  if (issue) {
+    if (issue.creatorId && issue.creatorId !== currentUserId) ids.add(issue.creatorId);
+    if (issue.assigneeId && issue.assigneeId !== currentUserId) ids.add(issue.assigneeId);
+  }
+  return Array.from(ids);
+}
 
 // ==========================================
 // --- ЧАСТ 4: ЕНДПОИНТИ ЗА ИЗВЕСТИЯТА ---
 // ==========================================
 
-app.get('/api/notifications', async (req: Request, res: Response) => {
-  // Неактивен за момента код
+app.get('/api/notifications', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const rows = await db.all('SELECT * FROM Notification WHERE userId = ? ORDER BY id DESC LIMIT 50', [req.userId]);
+    const formatted = rows.map(r => ({
+      id: String(r.id),
+      type: r.type,
+      title: r.title,
+      desc: r.desc,
+      date: new Date(r.createdAt).toLocaleTimeString('bg-BG', { hour: '2-digit', minute: '2-digit' }) + ' ' + new Date(r.createdAt).toLocaleDateString('bg-BG'),
+      targetId: r.targetId,
+      unread: r.unread === 1
+    }));
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ error: 'Грешка при зареждане на известията' });
+  }
 });
 
-app.patch('/api/notifications/read-all', async (req: Request, res: Response) => {
-  // Неактивен за момента код
+app.patch('/api/notifications/read-all', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    await db.run('UPDATE Notification SET unread = 0 WHERE userId = ?', [req.userId]);
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Грешка при актуализиране' });
+  }
+});
+
+// НОВ ЕНДПОИНТ: Изтриване на конкретна нотификация по ID (Изискване 3)
+app.delete('/api/notifications/:id', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  try {
+    const result = await db.run('DELETE FROM Notification WHERE id = ? AND userId = ?', [req.params.id, req.userId]);
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Известието не е намерено или нямате достъп до него' });
+    }
+    res.json({ success: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Грешка при изтриване на известието' });
+  }
+});
+
+// НОВ ЕНДПОИНТ: Маркиране на ЕДИНИЧНО известие като прочетено по неговото ID
+app.patch('/api/notifications/:id/read', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  const { id } = req.params;
+
+  try {
+    // Подсигуряваме се, че потребителят променя само собственото си известие
+    const result = await db.run(
+      'UPDATE Notification SET unread = 0 WHERE id = ? AND userId = ?',
+      [id, req.userId]
+    );
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Известието не е намерено или нямате достъп' });
+    }
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Single Notification Read Error:', error);
+    res.status(500).json({ error: 'Грешка при обновяване на известието' });
+  }
 });
 
 // ==========================================

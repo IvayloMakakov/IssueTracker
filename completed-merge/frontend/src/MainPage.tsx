@@ -1,7 +1,9 @@
+// frontend/src/MainPage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Issue, Notification } from './mainPageApi';
-import { Sidebar } from './components/SideBar';
+// 1. ЗАПАЗЕНО ЗА БЪДЕЩЕТО: Ако искаш да я върнеш, просто откоментирай долния ред
+// import { Sidebar } from './components/SideBar';
 import { Header } from './components/Header';
 import { FiltersBar } from './components/FiltersBar';
 import { IssueTable } from './components/IssueTable';
@@ -17,7 +19,8 @@ export default function MainPage() {
   const [currentUser, setCurrentUser] = useState<{ id: number, firstName: string, lastName: string, email: string } | null>(null);
 
   // UI Състояния
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  // 2. ЗАПАЗЕНО ЗА БЪДЕЩЕТО: Държим състоянието, за да не се чупят други обвързани логики
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
@@ -28,7 +31,7 @@ export default function MainPage() {
   const [activeType, setActiveType] = useState('All');
 
   useEffect(() => {
-    // 1. ПРОВЕРКА ЗА ТОКЕН И ИЗВЛИЧАНЕ НА ПОТРЕБИТЕЛЯ (Това липсваше!)
+    // 1. ПРОВЕРКА ЗА ТОКЕН И ИЗВЛИЧАНЕ НА ПОТРЕБИТЕЛЯ
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -37,17 +40,23 @@ export default function MainPage() {
 
     fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => {
-        if (!res.ok) throw new Error('Unauthorized');
+        if (res.status === 401) {
+          localStorage.removeItem('token');
+          navigate('/login');
+          throw new Error('Unauthorized');
+        }
+        if (!res.ok) throw new Error('Server Error');
         return res.json();
       })
       .then(user => setCurrentUser(user))
-      .catch(() => {
-        localStorage.removeItem('token');
-        navigate('/login');
+      .catch((err) => {
+        console.error("Проблем при проверка на сесията:", err);
       });
 
-    // 2. Взимане на задачите със защита (Поправената част от миналия път)
-    fetch('/api/issues')
+    // 2. Взимане на задачите със защита
+    fetch('/api/issues', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) {
@@ -62,43 +71,59 @@ export default function MainPage() {
         setIssues([]);
       });
 
-    // 3. Взимане на известията със защита
-    // fetch('/api/notifications')
-    //   .then(res => res.json())
-    //   .then(data => {
-    //     if (Array.isArray(data)) {
-    //       setNotifications(data);
-    //     } else {
-    //       setNotifications([]);
-    //     }
-    //   })
-    //   .catch(err => {
-    //     console.error("Грешка при зареждане на известията:", err);
-    //     setNotifications([]);
-    //   });
+    const fetchNotifications = () => {
+      fetch('/api/notifications', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setNotifications(data);
+          } else {
+            setNotifications([]);
+          }
+        })
+        .catch(err => {
+          console.error("Грешка при зареждане на известията:", err);
+          setNotifications([]);
+        });
+    };
+
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000);
+    return () => clearInterval(interval);
   }, [navigate]);
 
   const handleToggleFavorite = async (id: string) => {
-    const targetIssue = issues.find(i => i.id === id);
-    if (!targetIssue) return;
-    const nextFavoriteState = !targetIssue.isFavorite;
-    setIssues(prev => prev.map(i => i.id === id ? { ...i, isFavorite: nextFavoriteState } : i));
-    
+    const token = localStorage.getItem('token');
     try {
-      await fetch(`/api/ticket`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        // ДОБАВЕНО id: id ТУК
-        body: JSON.stringify({ id: id, field: 'isFavorite', value: nextFavoriteState }) 
+      const response = await fetch('/api/issues/favorite', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ issueDisplayId: id }) 
       });
+
+      if (!response.ok) throw new Error('Сървърна грешка при обновяване на любими');
+      const data = await response.json();
+
+      if (data.success) {
+        setIssues(prevIssues => 
+          prevIssues.map(issue => 
+            issue.id === id ? { ...issue, isFavorite: data.isFavorite } : issue
+          )
+        );
+      }
     } catch (error) {
-      setIssues(prev => prev.map(i => i.id === id ? { ...i, isFavorite: !nextFavoriteState } : i));
+      console.error("Грешка при синхронизация на любима задача:", error);
     }
   };
 
   const handleCreateIssue = (
     title: string, 
-    description: string, // Първа важна добавка: подреждаме аргументите правилно!
+    description: string, 
     type: any, 
     priority: any, 
     status: any, 
@@ -112,7 +137,6 @@ export default function MainPage() {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
-      // Изпращаме description към сървъра заедно с останалите правилно подредени полета
       body: JSON.stringify({ title, description, type, priority, status, assigneeName })
     })
     .then(res => res.json())
@@ -121,7 +145,6 @@ export default function MainPage() {
         console.error(newIssue.error);
         return;
       }
-      // Добавяме новата задача в стейта
       setIssues(prev => [newIssue, ...prev]);
     })
     .catch(err => console.error('Грешка при създаване на задача:', err));
@@ -133,21 +156,16 @@ export default function MainPage() {
     let list = [...issues];
     const userFullName = currentUser ? `${currentUser.firstName} ${currentUser.lastName}` : '';
 
-    // 1. Филтриране по активен таб
     if (activeTab === 'assigned') {
-      // Задачи, назначени на мен
       list = list.filter(issue => issue.assignee?.name === userFullName);
     } else if (activeTab === 'starred' || activeTab === 'watched') {
-      // ПОПРАВКА: При "Watched" излизат тези, които са отбелязани като любими (favourites / isFavorite)
       list = list.filter(issue => issue.isFavorite);
     } else if (activeTab === 'created') {
-      // Кастваме към Number за всеки случай, за да избегнем несъответствие тип string/number
       list = list.filter(issue => Number(issue.creatorId) === Number(currentUser?.id));
     } else if (activeTab === 'recent') {
       list = list.sort((a, b) => b.id.localeCompare(a.id));
     }
 
-    // 2. Допълнително филтриране по падащите менюта (Status, Priority, Type)
     if (activeStatus !== 'All') list = list.filter(i => i.status === activeStatus);
     if (activePriority !== 'All') list = list.filter(i => i.priority === activePriority);
     if (activeType !== 'All') list = list.filter(i => i.type === activeType);
@@ -169,7 +187,12 @@ export default function MainPage() {
       />
       
       <div className="mp-main-layout">
-        <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        {/* 3. ОПРАВЕНО / ПРЕМАХНАТО: Коментираме компонента на Sidebar-а. 
+            Ако искаш да го върнеш обратно, просто махни трите наклонени черти под този ред */}
+        {/// <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+        }
+        
+        {/* .mp-content-area автоматично ще заеме 100% ширина, тъй като Sidebar-ът е изключен */}
         <main className="mp-content-area">
           <div className="mp-page-header">
             <div>

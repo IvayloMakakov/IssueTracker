@@ -32,7 +32,7 @@ UPDATE 01.06:
     - Redesign of the possible error messages
     - Code clean up left behind from debugging
 
-TO-DO:
+- TO-DO:
     - Rethink the logic behind the deletion of the issue. An idea of archiving the issue, instead of deleting it from the DB was proposed. This might require DB modifications and possible new table for Issues, but will be discussed with the team again
     - Do some more user testing to find possible edge cases and possible missing elements or functionalities
     - Perhaps add more functionality, after confirming the stability of the current progress

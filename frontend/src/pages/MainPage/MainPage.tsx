@@ -1,10 +1,8 @@
-// frontend/src/MainPage.tsx
+// frontend/src/pages/MainPage/MainPage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Issue, Notification } from './mainPageApi';
-// 1. ЗАПАЗЕНО ЗА БЪДЕЩЕТО: Ако искаш да я върнеш, просто откоментирай долния ред
-// import { Sidebar } from './components/SideBar';
-import { Header } from './components/Header';
+import { Header } from '../../components/Header';
 import { FiltersBar } from './components/FiltersBar';
 import { IssueTable } from './components/IssueTable';
 import { NewIssueModal } from './components/NewIssueModal';
@@ -14,18 +12,18 @@ export default function MainPage() {
   const navigate = useNavigate();
   const [issues, setIssues] = useState<Issue[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  
+
   // Данни за текущия потребител
   const [currentUser, setCurrentUser] = useState<{ id: number, firstName: string, lastName: string, email: string } | null>(null);
 
   // UI Състояния
   // 2. ЗАПАЗЕНО ЗА БЪДЕЩЕТО: Държим състоянието, за да не се чупят други обвързани логики
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
   // Състояния на филтрите
-  const [activeTab, setActiveTab] = useState('all'); 
+  const [activeTab, setActiveTab] = useState('all');
   const [activeStatus, setActiveStatus] = useState('All');
   const [activePriority, setActivePriority] = useState('All');
   const [activeType, setActiveType] = useState('All');
@@ -99,19 +97,19 @@ export default function MainPage() {
     try {
       const response = await fetch('/api/issues/favorite', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ issueDisplayId: id }) 
+        body: JSON.stringify({ issueDisplayId: id })
       });
 
       if (!response.ok) throw new Error('Сървърна грешка при обновяване на любими');
       const data = await response.json();
 
       if (data.success) {
-        setIssues(prevIssues => 
-          prevIssues.map(issue => 
+        setIssues(prevIssues =>
+          prevIssues.map(issue =>
             issue.id === id ? { ...issue, isFavorite: data.isFavorite } : issue
           )
         );
@@ -122,18 +120,18 @@ export default function MainPage() {
   };
 
   const handleCreateIssue = (
-    title: string, 
-    description: string, 
-    type: any, 
-    priority: any, 
-    status: any, 
+    title: string,
+    description: string,
+    type: any,
+    priority: any,
+    status: any,
     assigneeName: string
   ) => {
     const token = localStorage.getItem('token');
 
     fetch('/api/issues', {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
@@ -177,22 +175,19 @@ export default function MainPage() {
 
   return (
     <div className="mp-app-container">
-      <Header 
+      <Header
         currentUser={currentUser}
-        issues={issues} 
-        notifications={notifications} 
-        setNotifications={setNotifications} 
+        issues={issues}
+        notifications={notifications}
+        setNotifications={setNotifications}
         onSelectIssue={(id) => setSelectedIssueId(id)}
         onOpenModal={() => setIsModalOpen(true)}
       />
-      
+
       <div className="mp-main-layout">
-        {/* 3. ОПРАВЕНО / ПРЕМАХНАТО: Коментираме компонента на Sidebar-а. 
-            Ако искаш да го върнеш обратно, просто махни трите наклонени черти под този ред */}
         {/// <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
         }
-        
-        {/* .mp-content-area автоматично ще заеме 100% ширина, тъй като Sidebar-ът е изключен */}
+
         <main className="mp-content-area">
           <div className="mp-page-header">
             <div>
@@ -206,7 +201,7 @@ export default function MainPage() {
             )}
           </div>
 
-          <FiltersBar 
+          <FiltersBar
             activeTab={activeTab} setActiveTab={setActiveTab}
             activeStatus={activeStatus} setActiveStatus={setActiveStatus}
             activePriority={activePriority} setActivePriority={setActivePriority}

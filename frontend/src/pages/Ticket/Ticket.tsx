@@ -1,11 +1,11 @@
-// frontend/src/Ticket.tsx
+// frontend/src/pages/Ticket/Ticket.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchTicketData, updateTicketField, addTicketComment, fetchAllUsers } from './ticketApi';
-import { Header } from './components/Header';
-import type { Issue, Notification } from './mainPageApi';
+import { Header } from '../../components/Header';
+import type { Issue, Notification } from '../MainPage/mainPageApi';
 import './ticket.css';
-import './mainPage.css';
+import '../MainPage/mainPage.css';
 
 type Status = "Backlog" | "To Do" | "In Progress" | "In Review" | "Done";
 type Priority = "Low" | "Medium" | "High" | "Urgent";
@@ -137,7 +137,7 @@ export default function Ticket() {
       .then(() => {
         setTicket(prev => prev ? { ...prev, title: editTitleValue.trim() } : null);
         setIsEditingTitle(false);
-        reloadTicketData(); // Презареждаме за нов служебен коментар в историята
+        reloadTicketData();
       })
       .catch(err => {
         setErrorMessage(err.message || "Грешка при обновяване на заглавието.");
@@ -160,7 +160,7 @@ export default function Ticket() {
       .then(() => {
         setTicket(prev => prev ? { ...prev, description: editDescValue.trim() } : null);
         setIsEditingDesc(false);
-        reloadTicketData(); // Презареждаме за нов служебен коментар в историята
+        reloadTicketData();
       })
       .catch(err => {
         setErrorMessage(err.message || "Грешка при обновяване на описанието.");
@@ -211,7 +211,7 @@ export default function Ticket() {
 
   const handleAddComment = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCommentText.trim() || !id || !headerUser) return; 
+    if (!newCommentText.trim() || !id || !headerUser) return;
 
     const authorFullName = `${headerUser.firstName} ${headerUser.lastName}`;
 
@@ -241,7 +241,7 @@ export default function Ticket() {
   return (
     <div className="mp-app-container">
       {headerUser && (
-        <Header 
+        <Header
           currentUser={headerUser}
           issues={allIssues}
           notifications={notifications}
@@ -254,7 +254,7 @@ export default function Ticket() {
       <div className="tk-app-container-ticket">
           <main className="tk-main-content">
               <button className="tk-btn-back" onClick={() => navigate('/')}>← Back to project</button>
-              
+
               {errorMessage && (
                 <div style={{ color: 'white', background: 'var(--tk-danger)', padding: '12px', borderRadius: '6px', marginBottom: '16px', fontWeight: 'bold' }}>
                   ⚠️ {errorMessage}
@@ -263,9 +263,8 @@ export default function Ticket() {
 
               <div className="tk-title-row">
                   <div style={{ flex: 1 }}>
-                      {/* INLINE РЕДАКЦИЯ НА ЗАГЛАВИЕТО (TITLE) */}
                       {isEditingTitle ? (
-                        <input 
+                        <input
                           type="text"
                           className="mp-form-input"
                           style={{ fontSize: '1.75rem', fontWeight: 700, padding: '4px 8px' }}
@@ -276,8 +275,8 @@ export default function Ticket() {
                           autoFocus
                         />
                       ) : (
-                        <h1 
-                          className="mp-page-title tk-editable" 
+                        <h1
+                          className="mp-page-title tk-editable"
                           style={{ fontSize: '1.75rem', cursor: 'pointer' }}
                           onClick={() => setIsEditingTitle(true)}
                           title="Кликнете, за да редактирате заглавието"
@@ -296,7 +295,6 @@ export default function Ticket() {
                   <span className="tk-badge">Priority: <strong style={{ marginLeft: '4px' }}>{ticket?.priority}</strong></span>
               </div>
 
-              {/* Информация за последна промяна в стила на приложението */}
               <div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: '1rem', height: '1rem' }}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
@@ -307,8 +305,7 @@ export default function Ticket() {
               <div className="tk-layout-grid">
                   <div>
                       <h3 style={{ fontWeight: 600, color: '#111827' }}>Description</h3>
-                      
-                      {/* INLINE РЕДАКЦИЯ НА ОПИСАНИЕТО (DESCRIPTION) */}
+
                       {isEditingDesc ? (
                         <textarea
                           className="mp-form-input tk-mt-2"
@@ -319,8 +316,8 @@ export default function Ticket() {
                           autoFocus
                         />
                       ) : (
-                        <p 
-                          className="tk-description-text tk-mt-2 tk-editable" 
+                        <p
+                          className="tk-description-text tk-mt-2 tk-editable"
                           style={{ cursor: 'pointer', padding: '8px', borderRadius: '4px' }}
                           onClick={() => setIsEditingDesc(true)}
                           title="Кликнете, за да редактирате описанието"
@@ -333,22 +330,18 @@ export default function Ticket() {
 
                       <div className="tk-comments-section">
                           <h3 style={{ fontWeight: 600, color: '#111827' }}>Discussion ({comments.length})</h3>
-                          
+
                           <div className="tk-comments-list">
                               {comments.map((comment) => {
-                                  // Проверяваме дали коментарът е системен лог
                                   const isSystem = comment.authorId === 0 || comment.content?.startsWith('[SYSTEM]');
-                                  
-                                  // Почистваме текста от префикса за интерфейса
-                                  const cleanContent = isSystem 
-                                    ? comment.content.replace('[SYSTEM]', '').trim() 
+                                  const cleanContent = isSystem
+                                    ? comment.content.replace('[SYSTEM]', '').trim()
                                     : comment.content || comment.text;
 
                                   const matchingUser = usersList.find(u => u.id === comment.authorId);
                                   const authorName = matchingUser ? `${matchingUser.firstName} ${matchingUser.lastName}` : "Unknown User";
                                   const initials = getInitials(authorName);
 
-                                  // Дизайн за служебните коментари (Системен лог без емоджита)
                                   if (isSystem) {
                                     return (
                                       <div key={comment.id} className="tk-system-log-card">
@@ -361,7 +354,6 @@ export default function Ticket() {
                                     );
                                   }
 
-                                  // Дизайн за редовен потребителски коментар
                                   return (
                                       <div key={comment.id} className="tk-comment-card" style={{ backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                                           <div className="tk-comment-header">
@@ -381,7 +373,7 @@ export default function Ticket() {
 
                           <div className="tk-add-comment-box tk-mt-4" style={{ backgroundColor: '#f9fafb', border: '1px solid #e5e7eb' }}>
                               <form onSubmit={handleAddComment}>
-                                  <textarea 
+                                  <textarea
                                     className="mp-form-input"
                                     style={{ minHeight: '100px', backgroundColor: '#ffffff', border: '1px solid #d1d5db', resize: 'none' }}
                                     placeholder="Add a comment or feedback..."
@@ -398,9 +390,9 @@ export default function Ticket() {
                       <div className="tk-details-card" style={{ backgroundColor: '#f9fafb', borderColor: '#e5e7eb' }}>
                           <div className="tk-field">
                               <label className="mp-form-label mp-font-bold">Status Lifecycle</label>
-                              <select 
-                                className="mp-form-select" 
-                                value={ticket?.status} 
+                              <select
+                                className="mp-form-select"
+                                value={ticket?.status}
                                 onChange={(e) => handleStatusChange(e.target.value as Status)}
                               >
                                   {ticket && allowedNextStatus[ticket.status].map(s => (
@@ -425,7 +417,7 @@ export default function Ticket() {
                               </select>
                           </div>
                       </div>
-                      
+
                       <button onClick={() => setIsDeleted(true)} className="tk-btn-danger tk-w-full tk-mt-4" style={{ borderRadius: '0.5rem', padding: '0.625rem' }}>
                         🗑 Delete Issue
                       </button>

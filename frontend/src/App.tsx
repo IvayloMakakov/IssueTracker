@@ -1,9 +1,9 @@
 // frontend/src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
-import Login from './Login';
-import MainPage from './MainPage';
-import Ticket from './Ticket';
+import Login from './pages/Login/Login';
+import MainPage from './pages/MainPage/MainPage';
+import Ticket from './pages/Ticket/Ticket';
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(!!localStorage.getItem('token'));

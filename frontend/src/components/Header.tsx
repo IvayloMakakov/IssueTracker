@@ -1,7 +1,7 @@
 // frontend/src/components/Header.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import type { Issue, Notification } from '../mainPageApi';
+import type { Issue, Notification } from '../pages/MainPage/mainPageApi';
 
 interface HeaderProps {
   currentUser: { firstName: string, lastName: string, email: string };

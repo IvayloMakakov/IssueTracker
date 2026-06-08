@@ -1,4 +1,3 @@
-// frontend/src/App.tsx
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useState } from 'react';
 import Login from './pages/Login/Login';
@@ -20,7 +19,6 @@ function App() {
           element={<Login onLoginSuccess={handleLoginSuccess} />} 
         />
 
-        {/* Корекция тук: нелогнатите отиват към /login */}
         <Route 
           path="/" 
           element={isAuthenticated ? <MainPage /> : <Navigate to="/login" replace />} 
@@ -31,7 +29,6 @@ function App() {
           element={isAuthenticated ? <Ticket /> : <Navigate to="/login" replace />} 
         />
 
-        {/* Защита от грешни URL адреси - винаги към / */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </div>

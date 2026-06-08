@@ -19,7 +19,6 @@ router.get('/', async (req: Request, res: Response) => {
         const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
         userId = decoded.id;
       } catch (e) {
-        // remains null for unauthenticated requests
       }
     }
 

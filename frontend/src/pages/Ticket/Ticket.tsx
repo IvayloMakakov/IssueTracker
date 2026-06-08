@@ -1,4 +1,3 @@
-// frontend/src/pages/Ticket/Ticket.tsx
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { fetchTicketData, updateTicketField, addTicketComment, fetchAllUsers } from './ticketApi';
@@ -34,12 +33,10 @@ export default function Ticket() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  // Данни за заглавната лента (Header)
   const [headerUser, setHeaderUser] = useState<{ id: number; firstName: string; lastName: string; email: string } | null>(null);
   const [allIssues, setAllIssues] = useState<Issue[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Данни за самия тикет
   const [ticket, setTicket] = useState<{title: string, description: string, status: Status, priority: Priority, assigneeId: number, updatedAt: string} | null>(null);
   const [comments, setComments] = useState<any[]>([]);
   const [newCommentText, setNewCommentText] = useState("");
@@ -48,13 +45,11 @@ export default function Ticket() {
   const [usersList, setUsersList] = useState<DbUser[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Стейтове за управление на inline-редакцията
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editTitleValue, setEditTitleValue] = useState("");
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [editDescValue, setEditDescValue] = useState("");
 
-  // Помощна функция за презареждане на билета в реално време при системни промени
   const reloadTicketData = () => {
     if (!id) return;
     fetchTicketData(id)
@@ -81,25 +76,21 @@ export default function Ticket() {
       return;
     }
 
-    // 1. Извличане на профила за Header-а
     fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(user => setHeaderUser(user))
         .catch(() => {});
 
-    // 2. Извличане на всички задачи за търсачката в Header-а
     fetch('/api/issues', { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(data => { if (Array.isArray(data)) setAllIssues(data); })
         .catch(() => {});
 
-    // 3. Извличане на нотификациите за камбанката в Header-а
     fetch('/api/notifications', { headers: { 'Authorization': `Bearer ${token}` } })
         .then(res => res.json())
         .then(data => { if (Array.isArray(data)) setNotifications(data); })
         .catch(() => {});
 
-    // 4. Извличане на основните данни за билета и списъка с потребители
     Promise.all([fetchTicketData(id), fetchAllUsers()])
       .then(([data, users]) => {
         setUsersList(users);
@@ -122,7 +113,6 @@ export default function Ticket() {
       });
   }, [id, navigate]);
 
-  // Запис на редактираното заглавие (Title)
   const handleSaveTitle = () => {
     if (!id || !ticket || !editTitleValue.trim()) {
       setIsEditingTitle(false);
@@ -145,7 +135,6 @@ export default function Ticket() {
       });
   };
 
-  // Запис на редактираното описание (Description)
   const handleSaveDescription = () => {
     if (!id || !ticket) {
       setIsEditingDesc(false);

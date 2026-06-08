@@ -1,4 +1,3 @@
-// frontend/src/components/FiltersBar.tsx
 import React, { useState, useRef, useEffect } from 'react';
 
 interface FiltersBarProps {
@@ -25,7 +24,6 @@ export const FiltersBar: React.FC<FiltersBarProps> = ({
 
   return (
     <div className="mp-filters-container">
-      {/* Tabs */}
       <div className="mp-tabs-wrapper">
         {tabs.map(tab => (
           <button
@@ -38,7 +36,6 @@ export const FiltersBar: React.FC<FiltersBarProps> = ({
         ))}
       </div>
 
-      {/* Filters Dropdowns Bar */}
       <div className="mp-dropdowns-bar">
         <div className="mp-dropdowns-group">
           <DropdownFilter label="Status" currentValue={activeStatus} onChange={setActiveStatus} options={['All', 'To Do', 'In Progress', 'In Review', 'Done', 'Backlog']} />
@@ -50,7 +47,6 @@ export const FiltersBar: React.FC<FiltersBarProps> = ({
   );
 };
 
-// Използваме useRef и useEffect за затваряне (същата логика като в Header.tsx)
 const DropdownFilter: React.FC<{ label: string, currentValue: string, onChange: (val: string) => void, options: string[] }> = ({ label, currentValue, onChange, options }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -85,8 +81,8 @@ const DropdownFilter: React.FC<{ label: string, currentValue: string, onChange: 
               key={opt} 
               type="button"
               onClick={() => {
-                onChange(opt); // Сработва гарантирано първо!
-                setIsOpen(false); // Затваря менюто чак след избора
+                onChange(opt);
+                setIsOpen(false);
               }} 
               className="mp-dropdown-item"
             >

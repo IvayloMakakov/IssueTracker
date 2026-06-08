@@ -12,7 +12,7 @@ export interface Issue {
   assignee: Assignee | null;
   updatedAt: string;
   isFavorite: boolean;
-  creatorId: number; // Направи го задължителен number
+  creatorId: number; 
 }
 
 export interface Notification {
@@ -28,5 +28,5 @@ export interface Notification {
 export const fetchUsers = async () => {
   const response = await fetch('/api/users');
   if (!response.ok) throw new Error('Грешка при взимане на потребителите');
-  return response.json(); // Връща масив от [{id, firstName, lastName}, ...]
+  return response.json(); 
 };

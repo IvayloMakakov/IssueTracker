@@ -1,7 +1,3 @@
-/* ==========================================================================
-   🎯 ISSUE TRACKER - TICKET DETAILS CSS FILE (REFRESHED & MATCHED TO MAIN)
-   ========================================================================== */
-
 :root {
     --tk-bg-main: #ffffff;
     --tk-bg-page: #f8fafc;
@@ -20,17 +16,15 @@
   overflow-x: hidden;
 }
 
-/* --- 1. LAYOUT STRUCTURING (MATCHED TO MAIN PAGE) --- */
 .tk-app-container-ticket { 
   display: flex; 
   flex-direction: column; 
   flex: 1; 
   width: 100%; 
-  overflow-y: auto; /* Позволява гладко скролване на цялото съдържание под Header-а */
+  overflow-y: auto; 
   background-color: #ffffff;
 }
 
-/* Изцяло премахната странична лента от изгледа */
 .tk-sidebar-nav { 
   display: none !important;
 }
@@ -38,7 +32,7 @@
 .tk-main-content { 
   flex: 1; 
   width: 100%;
-  max-width: 1200px; /* Ограничаваме ширината за перфектна четимост в стила на списъка */
+  max-width: 1200px; 
   margin-left: auto;
   margin-right: auto;
   padding: 2rem 1.5rem;
@@ -52,7 +46,6 @@
   margin-top: 24px;
 }
 
-/* --- 2. TICKET HEADER AREA --- */
 .tk-title-row { 
   display: flex; 
   gap: 16px; 
@@ -65,7 +58,6 @@
   font-size: 14px; 
 }
 
-/* --- 3. BADGES & INTERFACE ELEMENTS --- */
 .tk-badges { 
   display: flex; 
   gap: 8px; 
@@ -93,7 +85,6 @@
   margin: 24px 0; 
 }
 
-/* --- 4. DISCUSSION & COMMENTS SECTION --- */
 .tk-comments-section h3 { 
   font-size: 18px; 
   margin-bottom: 16px; 
@@ -130,7 +121,6 @@
   padding: 16px; 
 }
 
-/* --- 5. SIDE META DETAILS CARD --- */
 .tk-details-card { 
   border: 1px solid var(--tk-border); 
   border-radius: 8px; 
@@ -147,7 +137,6 @@
   margin-bottom: 8px; 
 }
 
-/* --- 6. UTILITIES & BUTTONS --- */
 .tk-btn-danger { 
   padding: 8px 16px; 
   font-weight: 500; 
@@ -191,10 +180,9 @@
 .tk-mt-2 { margin-top: 8px; } 
 .tk-mt-4 { margin-top: 16px; }
 
-/* --- 7. SYSTEM ACTIVITY LOG (СЛУЖЕБНИ КОМЕНТАРИ БЕЗ ЕМОДЖИТА) --- */
 .tk-system-log-card {
-  background-color: #f8fafc !important; /* Блед сиво-син фон */
-  border: 1px dashed #cbd5e1 !important; /* Сива пунктирана рамка */
+  background-color: #f8fafc !important; 
+  border: 1px dashed #cbd5e1 !important; 
   border-radius: 6px !important;
   padding: 10px 16px !important;
   margin-bottom: 12px !important;
@@ -202,10 +190,9 @@
   justify-content: space-between !important;
   align-items: center !important;
   gap: 12px !important;
-  box-shadow: none !important; /* Премахваме сянката, за да се различава от потребителските карти */
+  box-shadow: none !important; 
 }
 
-/* Специфичен бадж, указващ че това е системен запис */
 .tk-system-log-card span:first-of-type {
   font-size: 0.725rem !important;
   font-weight: 600 !important;
@@ -217,23 +204,19 @@
   border-radius: 4px !important;
 }
 
-/* Текстът на самото системно съобщение */
 .tk-system-log-card span:last-of-type {
   color: #334155 !important;
   font-size: 0.9rem !important;
   font-weight: 500 !important;
 }
 
-/* Датата и часът на системното събитие най-вдясно */
 .tk-system-log-card div {
   font-size: 0.75rem !important;
   color: #94a3b8 !important;
   white-space: nowrap !important;
 }
 
-/* Стари неизползвани класове от навигацията (запазени за съвместимост) */
 .tk-top-nav, .tk-search-bar, .tk-nav-actions, .tk-custom-dropdown, 
 .tk-dropdown-trigger, .tk-dropdown-menu, .tk-dropdown-item, .tk-avatar-small {
   display: none !important;
 }
-

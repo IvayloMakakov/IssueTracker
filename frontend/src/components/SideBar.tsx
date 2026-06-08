@@ -1,4 +1,3 @@
-// frontend/src/components/Sidebar.tsx
 import React from 'react';
 
 interface SidebarProps {
@@ -15,7 +14,6 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen }) => {
           <div className="mp-sidebar-header-subtitle">Quick access</div>
         </div>
         
-        {/* Toggle Button */}
         <button 
           onClick={() => setIsOpen(!isOpen)}
           type="button" 

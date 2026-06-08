@@ -1,6 +1,3 @@
-// frontend/src/ticketApi.ts
-
-// Вземане на билета
 export const fetchTicketData = async (id: string) => {
   const token = localStorage.getItem('token');
   const response = await fetch(`/api/ticket?id=${id}`, {
@@ -10,7 +7,6 @@ export const fetchTicketData = async (id: string) => {
   return response.json();
 };
 
-// Промяна на поле по задача (ОПРАВЕНО: Добавена защита с JWT Токен)
 export const updateTicketField = async (id: string, field: string, value: string | number | boolean) => {
   const token = localStorage.getItem('token');
   
@@ -18,7 +14,7 @@ export const updateTicketField = async (id: string, field: string, value: string
     method: 'PATCH',
     headers: { 
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}` // Изпращаме токена към requireAuth
+      'Authorization': `Bearer ${token}` 
     },
     body: JSON.stringify({ id, field, value })
   });
@@ -30,7 +26,6 @@ export const updateTicketField = async (id: string, field: string, value: string
   return response.json();
 };
 
-// Добавяне на коментар (ОПРАВЕНО: Добавена защита с JWT Токен)
 export const addTicketComment = async (issueId: string, text: string, author: string) => {
     const token = localStorage.getItem('token');
     
@@ -38,14 +33,13 @@ export const addTicketComment = async (issueId: string, text: string, author: st
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}` // Изпращаме токена
+          'Authorization': `Bearer ${token}` 
         },
         body: JSON.stringify({ issueId, text, author })
     });
     return res.json();
 };
 
-// Вземане на всички потребители
 export const fetchAllUsers = async () => {
     const token = localStorage.getItem('token');
     const res = await fetch('/api/users', {

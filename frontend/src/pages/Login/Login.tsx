@@ -1,8 +1,7 @@
-// frontend/src/Login.tsx
 import './login.css';
 import { useEffect, useState, type FormEvent, type MouseEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { login, register, fetchMe, type AuthResponse } from './loginApi'; // ОПРАВЕНО: Премахнат е AuthSuccess от импорта
+import { login, register, fetchMe, type AuthResponse } from './loginApi';
 
 type Mode = 'login' | 'register';
 
@@ -30,7 +29,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Проверка за съществуващ токен при първоначално зареждане
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -52,7 +50,6 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     setError(null);
 
     if (mode === 'register') {
-      // --- РЕЖИМ: РЕГИСТРАЦИЯ ---
       const { ok, data } = await register(firstName, lastName, email, password);
       setLoading(false);
 
@@ -61,19 +58,16 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         return;
       }
 
-      // ОПРАВЕНО: Прихващаме грешката за съществуващ имейл от новия формат на бекенда
       if (data.success === false) {
         setError(data.error || 'Регистрацията беше неуспешна.');
         return;
       }
 
-      // Ако регистрацията е напълно успешна
       alert('Регистрацията е успешна! Моля, влезте в профила си.');
       setMode('login');
       setPassword('');
       
     } else {
-      // --- РЕЖИМ: ВХОД (LOGIN) ---
       const { ok, data } = await login(email, password);
       setLoading(false);
 
@@ -82,13 +76,11 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         return;
       }
 
-      // Случай 2 и 3: Ако success е false, изписваме детайлната грешка директно
       if (data.success === false) {
         setError(data.error || 'Невалиден имейл или парола');
         return;
       }
 
-      // Случай 1: Успешен вход (Имаме генериран токен от бекенда)
       if (data.token) {
         localStorage.setItem('token', data.token);
         onLoginSuccess();

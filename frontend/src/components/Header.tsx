@@ -1,4 +1,3 @@
-// frontend/src/components/Header.tsx
 import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Issue, Notification } from '../pages/MainPage/mainPageApi';
@@ -60,20 +59,16 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
     }
   };
 
-  // ОПРАВЕНО: Маркира като прочетена в базата данни при клик и премахва точката
   const handleNotificationClick = async (notification: Notification) => {
     setIsNotifOpen(false);
     navigate(`/ticket/${notification.targetId}`);
 
-    // Ако известието вече е прочетено, няма смисъл да правим мрежови заявки
     if (!notification.unread) return;
 
-    // 1. Оптимистично обновяваме UI веднага (Сменя стила на заглавието и маха точката)
     setNotifications(prev =>
       prev.map(n => n.id === notification.id ? { ...n, unread: false } : n)
     );
 
-    // 2. Изпращаме заявка към бекенда, за да променим статуса трайно в базата данни
     const token = localStorage.getItem('token');
     try {
       await fetch(`/api/notifications/${notification.id}/read`, {
@@ -82,7 +77,6 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
       });
     } catch (err) {
       console.error('Грешка при маркиране на известие като прочетено:', err);
-      // При грешка връщаме старото състояние
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, unread: true } : n)
       );
@@ -155,7 +149,6 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
         <div className="mp-header-actions">
           <button onClick={onOpenModal} className="mp-primary-btn">New Issue</button>
           
-          {/* НОТИФИКАЦИИ */}
           <div ref={notifRef} className="mp-bell-wrapper">
             <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="mp-bell-trigger">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="mp-bell-icon"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
@@ -204,10 +197,9 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
                           alignItems: 'center',
                           gap: '12px',
                           padding: '12px',
-                          backgroundColor: n.unread ? '#f8fafc' : '#ffffff' // По-наситен заден фон за непрочетените карти
+                          backgroundColor: n.unread ? '#f8fafc' : '#ffffff'
                         }}
                       >
-                        {/* ОПРАВЕНО: Премахната е точката отляво, когато известието е прочетено (n.unread е false) */}
                         <div style={{ width: '8px', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
                           {n.unread && (
                             <div 
@@ -226,7 +218,6 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
                         <div className="mp-notif-icon-container" style={{ flexShrink: 0 }}>{getNotifIcon(n.type)}</div>
                         
                         <div className="mp-notif-content" style={{ paddingRight: '24px', flexGrow: 1 }}>
-                          {/* Стилът mp-unread се грижи за bold на текста, само ако е непрочетена */}
                           <div className={`mp-notif-title ${n.unread ? 'mp-unread' : ''}`} style={{ fontWeight: n.unread ? 600 : 400 }}>
                             {n.title}
                           </div>

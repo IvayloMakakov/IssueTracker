@@ -1,10 +1,6 @@
-/* ==========================================================================
-   🎯 ISSUE TRACKER - AUTHENTICATION CSS FILE (REFRESHED & MATCHED TO MAIN)
-   ========================================================================== */
-
 .auth-screen-container {
   font-family: 'Outfit', system-ui, -apple-system, sans-serif !important;
-  background-color: #f8fafc; /* Вдъхновено от --tk-bg-page / mp-bg-page */
+  background-color: #f8fafc; 
   color: #0f172a;
   display: flex;
   align-items: center;
@@ -18,14 +14,13 @@
 .auth-card {
   background: #ffffff;
   padding: 2.5rem 2rem;
-  border-radius: 0.75rem; /* Мачнато с mp-modal-box */
+  border-radius: 0.75rem; 
   border: 1px solid #e5e7eb;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
   width: 100%;
-  max-width: 26rem; /* Символизира mp-modal-box максималната ширина */
+  max-width: 26rem; 
 }
 
-/* Стилизация за логото горе в картата */
 .auth-logo-badge {
   background-color: #0f172a;
   color: #ffffff;
@@ -41,13 +36,13 @@
   margin: 0 0 0.375rem;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #111827; /* Мачнато с mp-page-title */
+  color: #111827; 
 }
 
 .auth-subtitle {
   margin: 0 0 2rem;
   font-size: 0.875rem;
-  color: #6b7280; /* Мачнато с mp-page-subtitle */
+  color: #6b7280; 
 }
 
 .auth-form {
@@ -61,7 +56,7 @@
   flex-direction: column;
   font-size: 0.875rem;
   font-weight: 500;
-  color: #334155; /* Съответства на mp-form-label */
+  color: #334155; 
   gap: 0.375rem;
   text-align: left;
 }
@@ -72,7 +67,7 @@
   border: 1px solid #e5e7eb;
   color: #111827;
   font-size: 0.875rem;
-  border-radius: 0.5rem; /* Използва стила на mp-form-input */
+  border-radius: 0.5rem; 
   padding: 0.625rem;
   outline: none;
   transition: border-color 0.2s, background-color 0.2s;
@@ -83,7 +78,6 @@
   background-color: #ffffff;
 }
 
-/* Бутонът приема изцяло стила на .mp-btn-primary-submit */
 .auth-form button {
   width: 100%;
   padding: 0.625rem;
@@ -127,7 +121,7 @@
 }
 
 .auth-message.auth-error {
-  color: #ef4444; /* Мачнато с червения цвят на грешките */
+  color: #ef4444; 
 }
 
 .auth-hint {

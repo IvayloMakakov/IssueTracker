@@ -9,15 +9,20 @@ interface HeaderProps {
   setNotifications: React.Dispatch<React.SetStateAction<Notification[]>>;
   onSelectIssue: (issueId: string | null) => void;
   onOpenModal: () => void;
+  isSidebarOpen?: boolean;
+  setIsSidebarOpen?: (open: boolean) => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notifications, setNotifications, onSelectIssue, onOpenModal }) => {
+export const Header: React.FC<HeaderProps> = ({ 
+  currentUser, issues, notifications, setNotifications, onSelectIssue, onOpenModal, isSidebarOpen, setIsSidebarOpen 
+}) => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const [isMobileSearchVisible, setIsMobileSearchVisible] = useState(false);
 
   const searchRef = useRef<HTMLDivElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
@@ -76,7 +81,7 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
         headers: { 'Authorization': `Bearer ${token}` }
       });
     } catch (err) {
-      console.error('Грешка при маркиране на известие като прочетено:', err);
+      console.error(err);
       setNotifications(prev =>
         prev.map(n => n.id === notification.id ? { ...n, unread: true } : n)
       );
@@ -86,16 +91,14 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
   const handleDeleteNotification = async (e: React.MouseEvent, notifId: string) => {
     e.stopPropagation(); 
     const token = localStorage.getItem('token');
-    
     setNotifications(prev => prev.filter(n => n.id !== notifId));
-
     try {
       await fetch(`/api/notifications/${notifId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${token}` }
       });
     } catch (err) {
-      console.error('Грешка при изтриване на нотификация:', err);
+      console.error(err);
     }
   };
 
@@ -110,29 +113,55 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
 
   return (
     <>
-      <header className="mp-global-header">
-        <div className="mp-header-logo-section" onClick={() => navigate('/')}>
-          <div className="mp-logo-badge">IT</div>
-          <span className="mp-logo-text">Issue Tracker</span>
+      <header className="mp-global-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', position: 'relative' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          {setIsSidebarOpen && (
+            <button 
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
+              className="mp-mobile-menu-toggle"
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', display: 'none', alignItems: 'center', justifyContent: 'center' }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: '1.5rem', height: '1.5rem', color: '#0f172a' }}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+              </svg>
+            </button>
+          )}
+
+          <div className="mp-header-logo-section" onClick={() => navigate('/')} style={{ width: 'auto' }}>
+            <div className="mp-logo-badge">IT</div>
+            <span className="mp-logo-text" style={{ display: isMobileSearchVisible ? 'none' : 'block' }}>Issue Tracker</span>
+          </div>
         </div>
         
-        <div ref={searchRef} className="mp-search-wrapper">
+        <div 
+          ref={searchRef} 
+          className={`mp-search-wrapper ${isMobileSearchVisible ? 'mp-search-mobile-expanded' : ''}`}
+          style={{ flex: 1, maxWidth: '42rem' }}
+        >
           <div className="mp-search-input-container">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" className="mp-search-icon"><path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" /></svg>
             <input 
               type="text" 
-              placeholder="Search issues by ID, title, or keywords..." 
+              placeholder="Search issues..." 
               value={searchQuery}
               onChange={(e) => { setSearchQuery(e.target.value); setIsSearchOpen(e.target.value.trim() !== ''); }}
               className="mp-search-input" 
               autoComplete="off"
             />
+            {isMobileSearchVisible && (
+              <button 
+                onClick={() => { setIsMobileSearchVisible(false); setSearchQuery(''); setIsSearchOpen(false); }}
+                style={{ position: 'absolute', right: '10px', background: 'transparent', border: 'none', cursor: 'pointer', color: '#64748b' }}
+              >
+                ✕
+              </button>
+            )}
             {isSearchOpen && (
-              <div className="mp-search-dropdown">
+              <div className="mp-search-dropdown" style={{ width: '100%', position: 'absolute', top: '100%', zIndex: 100 }}>
                 <div className="mp-search-dropdown-header">{filteredSearch.length} results</div>
                 <div className="mp-search-results-list">
                   {filteredSearch.map(issue => (
-                    <div key={issue.id} onClick={() => navigate(`/ticket/${issue.id}`)} className="mp-search-result-item">
+                    <div key={issue.id} onClick={() => { navigate(`/ticket/${issue.id}`); setIsMobileSearchVisible(false); setIsSearchOpen(false); }} className="mp-search-result-item">
                       <div className="mp-search-result-meta">
                         <span className="mp-search-result-id">{issue.id}</span>
                         <span className="mp-search-result-status">{issue.status.replace(' ', '-')}</span>
@@ -146,104 +175,54 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
           </div>
         </div>
 
-        <div className="mp-header-actions">
-          <button onClick={onOpenModal} className="mp-primary-btn">New Issue</button>
+        <div className="mp-header-actions" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <button 
+            className="mp-mobile-search-trigger"
+            onClick={() => setIsMobileSearchVisible(!isMobileSearchVisible)}
+            style={{ display: 'none', background: 'transparent', border: 'none', cursor: 'pointer', padding: '4px', color: '#6b7280' }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" style={{ width: '1.5rem', height: '1.5rem' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+          </button>
+
+          <button onClick={onOpenModal} className="mp-primary-btn" style={{ padding: '6px 12px', fontSize: '0.85rem' }}>
+            <span className="mp-btn-text-desktop">New Issue</span>
+            <span className="mp-btn-text-mobile" style={{ display: 'none' }}>+</span>
+          </button>
           
           <div ref={notifRef} className="mp-bell-wrapper">
             <button onClick={() => setIsNotifOpen(!isNotifOpen)} className="mp-bell-trigger">
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor" className="mp-bell-icon"><path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" /></svg>
               {unreadCount > 0 && (
-                <span 
-                  className="mp-bell-badge"
-                  style={{
-                    backgroundColor: '#ef4444',
-                    color: 'white',
-                    fontSize: '0.7rem',
-                    fontWeight: 'bold',
-                    padding: unreadCount > 5 ? '2px 6px' : '2px 5px',
-                    borderRadius: unreadCount > 5 ? '10px' : '50%',
-                    position: 'absolute',
-                    top: '-4px',
-                    right: '-4px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
-                  }}
-                >
+                <span className="mp-bell-badge" style={{ backgroundColor: '#ef4444', color: 'white', fontSize: '0.7rem', fontWeight: 'bold', padding: unreadCount > 5 ? '2px 6px' : '2px 5px', borderRadius: unreadCount > 5 ? '10px' : '50%', position: 'absolute', top: '-4px', right: '-4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   {unreadCount > 5 ? '5+' : unreadCount}
                 </span>
               )}
             </button>
 
             {isNotifOpen && (
-              <div id="notifications-dropdown" className="mp-notifications-dropdown">
+              <div id="notifications-dropdown" className="mp-notifications-dropdown" style={{ position: 'absolute', right: 0, top: '100%', width: '280px' }}>
                 <div className="mp-notif-dropdown-header">
                   <h3 className="mp-notif-dropdown-title">Notifications</h3>
                   <button onClick={handleMarkAllAsRead} className="mp-mark-read-btn">Mark all as read</button>
                 </div>
-                <div className="mp-notifications-list" style={{ maxHeight: '350px', overflowY: 'auto' }}>
+                <div className="mp-notifications-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
                   {notifications.length === 0 ? (
                     <div className="mp-notif-empty-state">You're all caught up!</div>
                   ) : (
                     notifications.map(n => (
-                      <div 
-                        key={n.id} 
-                        onClick={() => handleNotificationClick(n)} 
-                        className="mp-notif-card"
-                        style={{ 
-                          position: 'relative', 
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '12px',
-                          padding: '12px',
-                          backgroundColor: n.unread ? '#f8fafc' : '#ffffff'
-                        }}
-                      >
+                      <div key={n.id} onClick={() => handleNotificationClick(n)} className="mp-notif-card" style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px', padding: '12px', backgroundColor: n.unread ? '#f8fafc' : '#ffffff' }}>
                         <div style={{ width: '8px', display: 'flex', justifyContent: 'center', flexShrink: 0 }}>
-                          {n.unread && (
-                            <div 
-                              className="mp-notif-unread-dot" 
-                              style={{ 
-                                position: 'static', 
-                                width: '8px', 
-                                height: '8px', 
-                                backgroundColor: '#3b82f6', 
-                                borderRadius: '50%' 
-                              }}
-                            ></div>
-                          )}
+                          {n.unread && <div className="mp-notif-unread-dot" style={{ position: 'static', width: '8px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '50%' }}></div>}
                         </div>
-
                         <div className="mp-notif-icon-container" style={{ flexShrink: 0 }}>{getNotifIcon(n.type)}</div>
-                        
                         <div className="mp-notif-content" style={{ paddingRight: '24px', flexGrow: 1 }}>
-                          <div className={`mp-notif-title ${n.unread ? 'mp-unread' : ''}`} style={{ fontWeight: n.unread ? 600 : 400 }}>
-                            {n.title}
-                          </div>
+                          <div className={`mp-notif-title ${n.unread ? 'mp-unread' : ''}`} style={{ fontWeight: n.unread ? 600 : 400 }}>{n.title}</div>
                           <div className="mp-notif-desc" style={{ fontSize: '0.8rem', color: n.unread ? '#1e293b' : '#64748b' }}>{n.desc}</div>
                           <div className="mp-notif-date" style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: '4px' }}>{n.date}</div>
                         </div>
-                        
-                        <button
-                          onClick={(e) => handleDeleteNotification(e, n.id)}
-                          style={{
-                            position: 'absolute',
-                            top: '50%',
-                            transform: 'translateY(-50%)',
-                            right: '8px',
-                            background: 'transparent',
-                            border: 'none',
-                            color: '#9ca3af',
-                            cursor: 'pointer',
-                            fontSize: '0.85rem',
-                            padding: '4px'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.color = '#ef4444'}
-                          onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
-                        >
-                          ✕
-                        </button>
+                        <button onClick={(e) => handleDeleteNotification(e, n.id)} style={{ position: 'absolute', top: '50%', transform: 'translateY(-50%)', right: '8px', background: 'transparent', border: 'none', color: '#9ca3af', cursor: 'pointer', fontSize: '0.85rem', padding: '4px' }}>✕</button>
                       </div>
                     ))
                   )}
@@ -257,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({ currentUser, issues, notificatio
               {initials}
             </button>
             {isProfileOpen && (
-              <div className="mp-profile-dropdown">
+              <div className="mp-profile-dropdown" style={{ position: 'absolute', right: 0, top: '100%', width: '180px' }}>
                 <div className="mp-profile-header">
                   <strong>{currentUser.firstName} {currentUser.lastName}</strong>
                   <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{currentUser.email}</div>

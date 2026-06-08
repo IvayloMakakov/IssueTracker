@@ -50,6 +50,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
     setError(null);
 
     if (mode === 'register') {
+      const pwdErr = validatePassword(password);
+      if (pwdErr) {
+        setError(pwdErr);
+        return;
+      }
+
+      setLoading(true);
       const { ok, data } = await register(firstName, lastName, email, password);
       setLoading(false);
 
@@ -68,6 +75,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       setPassword('');
       
     } else {
+      setLoading(true);
       const { ok, data } = await login(email, password);
       setLoading(false);
 

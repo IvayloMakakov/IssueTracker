@@ -175,6 +175,8 @@ export default function MainPage() {
         setNotifications={setNotifications}
         onSelectIssue={(id) => setSelectedIssueId(id)}
         onOpenModal={() => setIsModalOpen(true)}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
       />
 
       <div className="mp-main-layout">

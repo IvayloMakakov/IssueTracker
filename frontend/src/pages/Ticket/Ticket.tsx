@@ -49,6 +49,7 @@ export default function Ticket() {
   const [editTitleValue, setEditTitleValue] = useState("");
   const [isEditingDesc, setIsEditingDesc] = useState(false);
   const [editDescValue, setEditDescValue] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const reloadTicketData = () => {
     if (!id) return;
@@ -237,6 +238,8 @@ export default function Ticket() {
           setNotifications={setNotifications}
           onSelectIssue={() => {}}
           onOpenModal={() => navigate('/')}
+          isSidebarOpen={isSidebarOpen}
+          setIsSidebarOpen={setIsSidebarOpen}
         />
       )}
 

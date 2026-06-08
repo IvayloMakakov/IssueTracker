@@ -62,6 +62,7 @@
   display: flex; 
   gap: 8px; 
   margin-bottom: 24px; 
+  flex-wrap: wrap;
 }
 
 .tk-badge { 
@@ -77,6 +78,7 @@
 .tk-description-text { 
   color: var(--tk-text-muted); 
   line-height: 1.6; 
+  word-break: break-word;
 }
 
 .tk-divider { 
@@ -219,4 +221,25 @@
 .tk-top-nav, .tk-search-bar, .tk-nav-actions, .tk-custom-dropdown, 
 .tk-dropdown-trigger, .tk-dropdown-menu, .tk-dropdown-item, .tk-avatar-small {
   display: none !important;
+}
+
+@media (max-width: 768px) {
+  .tk-main-content {
+    padding: 1rem;
+  }
+
+  .tk-layout-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .tk-system-log-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .tk-system-log-card div {
+    align-self: flex-end;
+  }
 }

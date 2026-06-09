@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { getDb } from '../db';
 import { requireAuth } from '../middleware/auth';
 import { createNotification, getInterestedParties } from '../services/notifications';
+import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
@@ -58,6 +59,15 @@ router.patch('/', requireAuth, async (req: Request, res: Response): Promise<any>
   let { id, field, value } = req.body;
   if (field === 'assignee') field = 'assigneeId';
 
+  const allowedFields = ['status', 'priority', 'assigneeId', 'title', 'description'];
+  if (!allowedFields.includes(field)) {
+    return res.status(400).json({ success: false, message: 'Опит за невалидна операция!' });
+  }
+
+  if (typeof value === 'string' && (field === 'title' || field === 'description')) {
+    value = sanitizeHtml(value.trim(), { allowedTags: [], allowedAttributes: {} });
+  }
+  
   try {
     const db = getDb();
     const ticket = await db.get('SELECT * FROM Issue WHERE displayId = ?', [id]);
@@ -114,8 +124,8 @@ router.patch('/', requireAuth, async (req: Request, res: Response): Promise<any>
 
     if (systemCommentText) {
       await db.run(
-        'INSERT INTO Comment (content, authorId, issueId, createdAt) VALUES (?, 0, ?, ?)',
-        [systemCommentText, ticket.id, nowIso]
+        'INSERT INTO Comment (content, authorId, issueId, createdAt) VALUES (?, ?, ?, ?)',
+        [systemCommentText, currentUserId, ticket.id, nowIso]
       );
     }
 
@@ -133,6 +143,8 @@ router.post('/comments', requireAuth, async (req: Request, res: Response): Promi
     return res.status(400).json({ error: 'Коментарът не може да бъде празен' });
   }
 
+  const safeText = sanitizeHtml(text.trim(), { allowedTags: [], allowedAttributes: {} });
+
   try {
     const db = getDb();
     const ticket = await db.get('SELECT id, displayId, creatorId, assigneeId FROM Issue WHERE displayId = ?', [issueId]);
@@ -143,7 +155,7 @@ router.post('/comments', requireAuth, async (req: Request, res: Response): Promi
 
     const result = await db.run(
       'INSERT INTO Comment (content, authorId, issueId, createdAt) VALUES (?, ?, ?, ?)',
-      [text.trim(), req.userId, ticket.id, nowIso]
+      [safeText, req.userId, ticket.id, nowIso]
     );
 
     const formattedDate = now.toLocaleString('bg-BG', {
@@ -158,7 +170,7 @@ router.post('/comments', requireAuth, async (req: Request, res: Response): Promi
       success: true,
       comment: {
         id: result.lastID,
-        content: text.trim(),
+        content: safeText,
         authorId: req.userId,
         issueId: ticket.id,
         createdAt: formattedDate
@@ -172,6 +184,47 @@ router.post('/comments', requireAuth, async (req: Request, res: Response): Promi
   } catch (error) {
     console.error('Create Comment Error:', error);
     res.status(500).json({ error: 'Вътрешна грешка' });
+  }
+});
+
+router.delete('/', requireAuth, async (req: Request, res: Response): Promise<any> => {
+  const { id } = req.query; 
+
+  if (!id) {
+    return res.status(400).json({ error: 'Липсва идентификатор на задачата за изтриване' });
+  }
+
+  try {
+    const db = getDb();
+    
+    let ticketId = Number(id);
+    
+    if (isNaN(ticketId)) {
+      const issue = await db.get('SELECT id FROM Issue WHERE displayId = ?', [id]);
+      if (!issue) {
+        return res.status(404).json({ error: 'Задачата не е намерена в базата данни' });
+      }
+      ticketId = issue.id;
+    }
+
+    const issueData = await db.get('SELECT displayId FROM Issue WHERE id = ?', [ticketId]);
+    if (issueData) {
+        await db.run('DELETE FROM Notification WHERE targetId = ?', [issueData.displayId]);
+    }
+
+    await db.run('DELETE FROM Comment WHERE issueId = ?', [ticketId]);
+    await db.run('DELETE FROM UserFavorite WHERE issueId = ?', [ticketId]);
+    
+    const result = await db.run('DELETE FROM Issue WHERE id = ?', [ticketId]);
+
+    if (result.changes === 0) {
+      return res.status(404).json({ error: 'Задачата не е намерена или вече е изтрита' });
+    }
+
+    res.json({ success: true, message: 'Задачата е изтрита успешно' });
+  } catch (error) {
+    console.error('Delete Ticket Error:', error);
+    res.status(500).json({ error: 'Сървърна грешка при изтриване на задачата' });
   }
 });
 

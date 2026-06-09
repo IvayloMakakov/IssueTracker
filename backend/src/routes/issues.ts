@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { requireAuth } from '../middleware/auth';
 import { JWT_SECRET } from '../config';
 import { createNotification } from '../services/notifications';
+import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
@@ -73,6 +74,9 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
     return res.status(400).json({ error: 'Заглавието е задължително поле!' });
   }
 
+  const safeTitle = sanitizeHtml(title.trim(), { allowedTags: [], allowedAttributes: {} });
+  const safeDescription = description ? sanitizeHtml(description.trim(), { allowedTags: [], allowedAttributes: {} }) : '';
+
   try {
     const db = getDb();
     let assigneeId: number | null = null;
@@ -94,14 +98,14 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
     await db.run(
       `INSERT INTO Issue (displayId, title, description, type, status, priority, creatorId, assigneeId, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [displayId, title.trim(), description || '', type || 'Task', status || 'To Do', priority || 'Medium', req.userId, assigneeId, nowIso, nowIso]
+      [displayId, safeTitle, safeDescription, type || 'Task', status || 'To Do', priority || 'Medium', req.userId, assigneeId, nowIso, nowIso]
     );
 
     await createNotification(
       req.userId!,
       'assignment',
       'Успешно създадена задача',
-      `Вие успешно създадохте нова задача: ${displayId} - "${title.trim()}"`,
+      `Вие успешно създадохте нова задача: ${displayId} - "${safeTitle}"`,
       displayId
     );
 
@@ -117,7 +121,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
 
     res.status(201).json({
       id: displayId,
-      title,
+      title: safeTitle,
       type,
       status,
       priority,

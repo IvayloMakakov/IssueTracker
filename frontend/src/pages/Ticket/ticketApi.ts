@@ -48,3 +48,16 @@ export const fetchAllUsers = async () => {
     if (!res.ok) throw new Error('Грешка при извличане на потребителите');
     return res.json();
 };
+
+export const deleteTicket = async (dbId: number) => {
+  const token = localStorage.getItem('token');
+  const response = await fetch(`/api/ticket?id=${dbId}`, {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || 'Грешка при изтриване');
+  }
+  return response.json();
+};

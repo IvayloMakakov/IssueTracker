@@ -14,7 +14,6 @@ export default function MainPage() {
 
   const [currentUser, setCurrentUser] = useState<{ id: number, firstName: string, lastName: string, email: string } | null>(null);
 
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
@@ -175,8 +174,6 @@ export default function MainPage() {
         setNotifications={setNotifications}
         onSelectIssue={(id) => setSelectedIssueId(id)}
         onOpenModal={() => setIsModalOpen(true)}
-        isSidebarOpen={isSidebarOpen}
-        setIsSidebarOpen={setIsSidebarOpen}
       />
 
       <div className="mp-main-layout">

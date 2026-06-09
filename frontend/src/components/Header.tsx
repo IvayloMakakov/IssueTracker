@@ -236,7 +236,7 @@ export const Header: React.FC<HeaderProps> = ({
               {initials}
             </button>
             {isProfileOpen && (
-              <div className="mp-profile-dropdown" style={{ position: 'absolute', right: 0, top: '100%', width: '180px' }}>
+              <div className="mp-profile-dropdown" style={{ position: 'absolute', right: 0, top: '100%' }}>
                 <div className="mp-profile-header">
                   <strong>{currentUser.firstName} {currentUser.lastName}</strong>
                   <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{currentUser.email}</div>

@@ -4,6 +4,7 @@ import jwt from 'jsonwebtoken';
 import { getDb } from '../db';
 import { requireAuth } from '../middleware/auth';
 import { JWT_SECRET, SALT_ROUNDS } from '../config';
+import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
@@ -13,6 +14,9 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
   if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
     return res.json({ success: false, error: 'Всички полета са задължителни!' });
   }
+
+  const safeFirstName = sanitizeHtml(firstName.trim(), { allowedTags: [], allowedAttributes: {} });
+  const safeLastName = sanitizeHtml(lastName.trim(), { allowedTags: [], allowedAttributes: {} });
 
   try {
     const db = getDb();
@@ -25,7 +29,7 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
     await db.run(
       'INSERT INTO User (firstName, lastName, email, passwordHash) VALUES (?, ?, ?, ?)',
-      [firstName.trim(), lastName.trim(), email.toLowerCase().trim(), passwordHash]
+      [safeFirstName, safeLastName, email.toLowerCase().trim(), passwordHash]
     );
 
     res.status(201).json({ success: true, message: 'Потребителят е регистриран успешно!' });
@@ -90,6 +94,9 @@ router.put('/me', requireAuth, async (req: Request, res: Response): Promise<any>
     return res.status(400).json({ error: 'Името и фамилията не могат да бъдат празни' });
   }
 
+  const safeFirstName = sanitizeHtml(firstName.trim(), { allowedTags: [], allowedAttributes: {} });
+  const safeLastName = sanitizeHtml(lastName.trim(), { allowedTags: [], allowedAttributes: {} });
+
   try {
     const db = getDb();
     if (newPassword) {
@@ -108,12 +115,12 @@ router.put('/me', requireAuth, async (req: Request, res: Response): Promise<any>
       const newPasswordHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
       await db.run(
         'UPDATE User SET firstName = ?, lastName = ?, passwordHash = ? WHERE id = ?',
-        [firstName.trim(), lastName.trim(), newPasswordHash, req.userId]
+        [safeFirstName, safeLastName, newPasswordHash, req.userId]
       );
     } else {
       await db.run(
         'UPDATE User SET firstName = ?, lastName = ? WHERE id = ?',
-        [firstName.trim(), lastName.trim(), req.userId]
+        [safeFirstName, safeLastName, req.userId]
       );
     }
 

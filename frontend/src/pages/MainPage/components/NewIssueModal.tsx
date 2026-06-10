@@ -1,4 +1,3 @@
-// frontend/src/components/NewIssueModal.tsx
 import React, { useState, useEffect } from 'react';
 import type { Issue } from '../mainPageApi';
 
@@ -11,13 +10,12 @@ interface User {
 interface NewIssueModalProps {
   isOpen: boolean;
   onClose: () => void;
-  // Добавено description в дефиницията на onCreate
   onCreate: (title: string, description: string, type: Issue['type'], priority: Issue['priority'], status: Issue['status'], assigneeName: string) => void;
 }
 
 export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, onCreate }) => {
   const [title, setTitle] = useState('');
-  const [description, setDescription] = useState(''); // Нов State за описанието
+  const [description, setDescription] = useState('');
   const [type, setType] = useState<Issue['type']>('Task');
   const [priority, setPriority] = useState<Issue['priority']>('Medium');
   const [status, setStatus] = useState<Issue['status']>('To Do');
@@ -46,10 +44,9 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Подаваме description като втори аргумент
     onCreate(title, description, type, priority, status, assignee);
     setTitle(''); 
-    setDescription(''); // Нулираме описанието
+    setDescription(''); 
     setType('Task'); 
     setPriority('Medium'); 
     setStatus('To Do'); 
@@ -84,7 +81,6 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
               />
             </div>
 
-            {/* НОВО: Поле за Описание */}
             <div className="mp-form-group-full">
               <label className="mp-form-label mp-font-bold">Description</label>
               <textarea 
@@ -92,7 +88,6 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
                 onChange={(e) => setDescription(e.target.value)} 
                 placeholder="Describe the issue in details..." 
                 className="mp-form-input"
-                // ПРОМЯНА ТУК: Сменяме resize: 'vertical' на resize: 'none'
                 style={{ minHeight: '100px', resize: 'none', fontFamily: 'inherit' }} 
               />
             </div>

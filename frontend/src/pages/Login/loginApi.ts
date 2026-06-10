@@ -1,4 +1,3 @@
-// frontend/src/loginApi.ts
 export interface User {
   firstName: string;
   lastName: string;
@@ -8,7 +7,7 @@ export interface User {
 export interface AuthResponse {
   success: boolean;
   token?: string;
-  error?: string; // Съобщението за грешка при несъответствие
+  error?: string; 
   user?: User;
 }
 

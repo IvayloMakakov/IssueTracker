@@ -1,4 +1,3 @@
-// frontend/src/pages/MainPage/MainPage.tsx
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { Issue, Notification } from './mainPageApi';
@@ -13,23 +12,17 @@ export default function MainPage() {
   const [issues, setIssues] = useState<Issue[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Данни за текущия потребител
   const [currentUser, setCurrentUser] = useState<{ id: number, firstName: string, lastName: string, email: string } | null>(null);
 
-  // UI Състояния
-  // 2. ЗАПАЗЕНО ЗА БЪДЕЩЕТО: Държим състоянието, за да не се чупят други обвързани логики
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedIssueId, setSelectedIssueId] = useState<string | null>(null);
 
-  // Състояния на филтрите
   const [activeTab, setActiveTab] = useState('all');
   const [activeStatus, setActiveStatus] = useState('All');
   const [activePriority, setActivePriority] = useState('All');
   const [activeType, setActiveType] = useState('All');
 
   useEffect(() => {
-    // 1. ПРОВЕРКА ЗА ТОКЕН И ИЗВЛИЧАНЕ НА ПОТРЕБИТЕЛЯ
     const token = localStorage.getItem('token');
     if (!token) {
       navigate('/login');
@@ -51,7 +44,6 @@ export default function MainPage() {
         console.error("Проблем при проверка на сесията:", err);
       });
 
-    // 2. Взимане на задачите със защита
     fetch('/api/issues', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -185,14 +177,11 @@ export default function MainPage() {
       />
 
       <div className="mp-main-layout">
-        {/// <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
-        }
-
         <main className="mp-content-area">
           <div className="mp-page-header">
             <div>
               <h1 className="mp-page-title">Issues List</h1>
-              <p className="mp-page-subtitle">View and filter live issues connected to Node.js</p>
+              <p className="mp-page-subtitle">View and filter currently live issues </p>
             </div>
             {selectedIssueId && (
               <button onClick={() => setSelectedIssueId(null)} className="mp-clear-search-btn">

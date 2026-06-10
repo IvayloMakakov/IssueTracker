@@ -1,4 +1,3 @@
-// frontend/src/components/IssueTable.tsx
 import React from 'react';
 import type { Issue } from '../mainPageApi';
 import { useNavigate } from 'react-router-dom';

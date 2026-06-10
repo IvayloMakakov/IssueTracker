@@ -1,8 +1,7 @@
-/* ==========================================================================
-   🎯 ISSUE TRACKER - MAIN PAGE MAIN CSS FILE (REFRESHED & OPTIMIZED)
-   ========================================================================== */
+body {
+  margin: 0;
+}
 
-/* --- 1. BASE / GLOBAL STYLES --- */
 .mp-app-container * {
   box-sizing: border-box;
 }
@@ -50,6 +49,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
 .mp-page-title {
@@ -83,8 +83,6 @@
   background-color: #e5e7eb;
 }
 
-
-/* --- 2. GLOBAL HEADER --- */
 .mp-global-header {
   height: 4rem; 
   border-bottom: 1px solid #e5e7eb;
@@ -128,8 +126,6 @@
   gap: 1rem;
 }
 
-
-/* --- 3. GLOBAL SEARCH --- */
 .mp-search-wrapper {
   flex: 1;
   max-width: 42rem; 
@@ -251,177 +247,6 @@
   color: #111827;
 }
 
-
-/* --- 4. SIDEBAR NAVIGATION --- */
-.mp-sidebar-container {
-  border-right: 1px solid #e5e7eb;
-  display: flex;
-  flex-direction: column;
-  background-color: #ffffff;
-  flex-shrink: 0;
-  position: relative;
-  z-index: 10;
-  width: 16rem; 
-  transition: width 0.3s ease-in-out;
-  min-width: 0;
-  overflow-x: hidden;
-}
-
-.mp-sidebar-header {
-  padding: 1rem;
-  border-bottom: 1px solid #f3f4f6;
-  display: flex;
-  align-items: center;
-  font-size: 0.875rem;
-  height: 4rem; 
-  position: relative;
-}
-
-.mp-sidebar-header-text {
-  flex: 1;
-  overflow: hidden;
-  transition: all 0.3s ease-in-out;
-  white-space: nowrap;
-  opacity: 1;
-  max-width: 12.5rem; 
-}
-
-.mp-sidebar-header-title {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.mp-sidebar-header-subtitle {
-  font-size: 0.75rem;
-  color: #6b7280;
-}
-
-.mp-sidebar-toggle-btn {
-  padding: 0.375rem;
-  border-radius: 0.375rem;
-  background-color: #ffffff;
-  border: 1px solid transparent;
-  color: #9ca3af;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
-  position: absolute;
-  right: 0.75rem;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mp-sidebar-toggle-btn:hover {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.mp-sidebar-chevron {
-  width: 1rem;
-  height: 1rem;
-  transition: transform 0.3s ease-in-out;
-}
-
-.mp-sidebar-chevron.mp-rotated {
-  transform: rotate(180deg);
-}
-
-.mp-sidebar-nav {
-  flex: 1;
-  padding: 0.75rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem; 
-  overflow-y: auto;
-  overflow-x: hidden;
-  font-size: 0.875rem;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.mp-sidebar-menu-title {
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: #9ca3af;
-  margin: 0.5rem 0;
-  padding: 0 0.5rem;
-  overflow: hidden;
-  transition: all 0.3s ease-in-out;
-  white-space: nowrap;
-  opacity: 1;
-  max-width: 12.5rem;
-}
-
-.mp-sidebar-link {
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  color: #4b5563;
-  text-decoration: none;
-  border-radius: 0.5rem;
-  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
-  width: 100%;
-  box-sizing: border-box;
-  overflow: hidden;
-  white-space: nowrap;
-}
-
-.mp-sidebar-link:hover {
-  background-color: #f3f4f6;
-  color: #111827;
-}
-
-.mp-sidebar-link.mp-active {
-  background-color: #0f172a;
-  color: #ffffff;
-  font-weight: 500;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-}
-
-.mp-sidebar-link.mp-active:hover {
-  background-color: #1e293b;
-}
-
-.mp-sidebar-icon-wrapper {
-  flex-shrink: 0;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.mp-sidebar-link-text {
-  overflow: hidden;
-  transition: all 0.3s ease-in-out;
-  white-space: nowrap;
-  opacity: 1;
-  max-width: 12.5rem;
-  margin-left: 0.75rem;
-}
-
-/* --- SIDEBAR CLOSED STATE --- */
-.mp-sidebar-container.is-closed {
-  width: 4rem; 
-}
-
-.mp-sidebar-container.is-closed .mp-sidebar-header-text,
-.mp-sidebar-container.is-closed .mp-sidebar-menu-title,
-.mp-sidebar-container.is-closed .mp-sidebar-link-text {
-  max-width: 0;
-  opacity: 0;
-  margin-left: 0;
-  pointer-events: none;
-}
-
-.mp-sidebar-container.is-closed .mp-sidebar-toggle-btn {
-  right: 0.875rem; 
-}
-
-
-/* --- 5. FILTERS BAR & TABS --- */
 .mp-filters-container {
   position: relative;
   z-index: 20;
@@ -450,6 +275,7 @@
   color: #6b7280;
   cursor: pointer;
   transition: color 0.3s, background-color 0.3s;
+  white-space: nowrap;
 }
 
 .mp-tab-btn:hover {
@@ -474,10 +300,14 @@
   display: flex;
   gap: 0.75rem;
   font-size: 0.875rem;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .mp-dropdown-container {
   position: relative;
+  flex: 1;
+  min-width: 140px;
 }
 
 .mp-filter-trigger {
@@ -490,7 +320,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  min-width: 8.75rem;
+  width: 100%;
   cursor: pointer;
   transition: background-color 0.2s, border-color 0.2s;
 }
@@ -515,10 +345,11 @@
   top: 100%;
   left: 0;
   margin-top: 0.25rem;
-  width: 12rem;
+  width: 100%;
+  min-width: 160px;
   background-color: #ffffff;
   border: 1px solid #f3f4f6;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   border-radius: 0.5rem;
   overflow: hidden;
   padding: 0.25rem 0;
@@ -542,13 +373,11 @@
   color: #2563eb;
 }
 
-
-/* --- 6. ISSUE TABLE --- */
 .mp-table-border-wrapper {
-  max-height: 500px;  /* Вертикалният скрол си остава */
+  max-height: 500px;  
   overflow-y: auto;   
-  overflow-x: hidden; /* ТОВА ПРЕМАХВА ХОРИЗОНТАЛНИЯ СКРОЛ ГАРАНТИРАНО */
-  width: 100%;        /* Подсигурява, че контейнерът заема само наличната ширина */
+  overflow-x: auto; 
+  width: 100%;        
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   position: relative;
@@ -560,6 +389,7 @@
   font-size: 0.875rem;
   border-collapse: collapse;
   table-layout: fixed; 
+  min-width: 800px;
 }
 
 .mp-table-head {
@@ -573,12 +403,11 @@
   padding: 0.75rem 1rem;
   position: sticky;
   top: 0;
-  background-color: #ffffff; /* Задължително плътен цвят, за да не прозират задачите отдолу */
-  z-index: 10; /* Да стои над скролиращото се съдържание */
+  background-color: #ffffff; 
+  z-index: 10; 
   box-shadow: inset 0 -1px 0 #e2e8f0;
 }
 
-/* Table Column Widths Definitions */
 .mp-th-bookmark { width: 3.5rem; text-align: center; }
 .mp-th-id { width: 5.5rem; }
 .mp-th-title { width: auto; } 
@@ -627,7 +456,6 @@
   text-overflow: ellipsis; 
 }
 
-/* Badges & Cell Elements */
 .mp-status-badge {
   display: inline-flex;
   align-items: center;
@@ -670,12 +498,59 @@
   font-style: italic;
 }
 
+.mp-user-avatar-btn, 
+.mp-header-actions .mp-user-avatar-btn,
+button.mp-user-avatar-btn {
+  width: 2rem !important;
+  height: 2rem !important;
+  min-width: 2rem !important;
+  min-height: 2rem !important;
+  max-width: 2rem !important;
+  max-height: 2rem !important;
+  border-radius: 50% !important;
+  overflow: hidden !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mp-user-avatar-btn.mp-bg-blue {
+  background-color: #3b82f6 !important;
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  cursor: pointer;
+}
+
+.mp-avatar-circle {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  min-width: 1.25rem !important;
+  min-height: 1.25rem !important;
+  max-width: 1.25rem !important;
+  max-height: 1.25rem !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.mp-icon-small,
+.mp-chevron-icon,
+.mp-bell-icon,
+.mp-search-icon {
+  width: 1.25rem !important;
+  height: 1.25rem !important;
+  max-width: 1.5rem !important;
+  max-height: 1.5rem !important;
+  flex-shrink: 0 !important;
+}
+
 .mp-text-assignee-name {
   color: #374151;
 }
 
-
-/* --- 7. MODALS --- */
 .mp-modal-overlay {
   position: fixed;
   inset: 0;
@@ -700,7 +575,8 @@
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); 
   width: 100%;
   max-width: 32rem; 
-  overflow: hidden;
+  overflow-y: auto;
+  max-height: 90vh;
   position: relative;
   z-index: 10;
   transition: all 0.2s;
@@ -823,8 +699,6 @@
   gap: 0.75rem;
 }
 
-
-/* --- 8. BUTTONS --- */
 .mp-primary-btn {
   background-color: #0f172a;
   color: #ffffff;
@@ -877,8 +751,6 @@
   background-color: #1e293b;
 }
 
-
-/* --- 9. NOTIFICATIONS & DROPDOWN --- */
 .mp-bell-wrapper {
   position: relative;
 }
@@ -901,7 +773,6 @@
   height: 1.5rem;
 }
 
-/* 🌟 Адаптивна значка за 5+ известия (ТОЧКА 4) */
 .mp-bell-badge {
   position: absolute;
   top: -2px;
@@ -941,7 +812,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #ffffff;
+  background-color: #f9fafb;
 }
 
 .mp-notif-dropdown-title {
@@ -1035,14 +906,12 @@
   top: 1rem;
 }
 
-
-/* --- 10. PROFILE DROPDOWN (ТОЧКА 6) --- */
 .mp-profile-dropdown {
   position: absolute;
   top: 100%;
   right: 0;
   margin-top: 0.5rem;
-  width: 14rem;
+  width: 16rem;
   background-color: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 0.5rem;
@@ -1055,6 +924,7 @@
   padding: 0.75rem 1rem;
   border-bottom: 1px solid #f3f4f6;
   background-color: #f9fafb;
+  word-break: break-all;
 }
 
 .mp-profile-item {
@@ -1078,8 +948,6 @@
   border-top: 1px solid #f3f4f6;
 }
 
-
-/* --- 11. SVGS, ICONS & AVATAR GRAPHICS --- */
 .mp-inline-flex-center {
   display: inline-flex;
   align-items: center;
@@ -1117,57 +985,64 @@
   color: #9ca3af;
 }
 
+@media (max-width: 768px) {
+  .mp-mobile-menu-toggle, .mp-mobile-search-trigger {
+    display: flex !important;
+  }
 
-/* ==========================================================================
-   🚨 ЗАЩИТНИ СТИЛОВЕ: ОГРАНИЧАВАНЕ НА РАЗМЕРИТЕ НА АВАТАРИТЕ И ИКОНИТЕ 🚨
-   ========================================================================== */
-.mp-user-avatar-btn, 
-.mp-header-actions .mp-user-avatar-btn,
-button.mp-user-avatar-btn {
-  width: 2rem !important;
-  height: 2rem !important;
-  min-width: 2rem !important;
-  min-height: 2rem !important;
-  max-width: 2rem !important;
-  max-height: 2rem !important;
-  border-radius: 50% !important;
-  overflow: hidden !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
+  .mp-search-wrapper {
+    display: none !important;
+  }
 
-/* Динамичен син цвят за профила (ТОЧКА 5) */
-.mp-user-avatar-btn.mp-bg-blue {
-  background-color: #3b82f6 !important;
-  color: white;
-  font-weight: 600;
-  font-size: 0.85rem;
-  border: none;
-  cursor: pointer;
-}
+  .mp-search-wrapper.mp-search-mobile-expanded {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    z-index: 99;
+    padding: 12px;
+  }
 
-.mp-avatar-circle {
-  width: 1.25rem !important;
-  height: 1.25rem !important;
-  min-width: 1.25rem !important;
-  min-height: 1.25rem !important;
-  max-width: 1.25rem !important;
-  max-height: 1.25rem !important;
-  border-radius: 50% !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
+  .mp-btn-text-desktop { display: none !important; }
+  .mp-btn-text-mobile { display: inline !important; font-size: 1.25rem; font-weight: bold; }
 
-.mp-sidebar-svg-icon,
-.mp-icon-small,
-.mp-chevron-icon,
-.mp-bell-icon,
-.mp-search-icon {
-  width: 1.25rem !important;
-  height: 1.25rem !important;
-  max-width: 1.5rem !important;
-  max-height: 1.5rem !important;
-  flex-shrink: 0 !important;
+  .mp-content-area {
+    padding: 1rem;
+  }
+  
+  .mp-page-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .mp-tabs-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .mp-tab-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .mp-dropdowns-bar {
+    width: 100%;
+  }
+
+  .mp-dropdowns-group {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .mp-dropdown-container {
+    width: 100%;
+  }
+
+  .mp-form-grid {
+    grid-template-columns: 1fr;
+  }
 }

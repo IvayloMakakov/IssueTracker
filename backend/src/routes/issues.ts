@@ -4,6 +4,7 @@ import { getDb } from '../db';
 import { requireAuth } from '../middleware/auth';
 import { JWT_SECRET } from '../config';
 import { createNotification } from '../services/notifications';
+import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
@@ -19,7 +20,6 @@ router.get('/', async (req: Request, res: Response) => {
         const decoded = jwt.verify(token, JWT_SECRET) as { id: number };
         userId = decoded.id;
       } catch (e) {
-        // remains null for unauthenticated requests
       }
     }
 
@@ -60,7 +60,7 @@ router.get('/', async (req: Request, res: Response) => {
       };
     });
 
-    res.json(formattedIssues);
+    res.status(200).json(formattedIssues);
   } catch (error) {
     console.error('Get Issues Error:', error);
     res.status(500).json({ error: 'Грешка при извличане на задачите' });
@@ -73,6 +73,9 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
   if (!title?.trim()) {
     return res.status(400).json({ error: 'Заглавието е задължително поле!' });
   }
+
+  const safeTitle = sanitizeHtml(title.trim(), { allowedTags: [], allowedAttributes: {} });
+  const safeDescription = description ? sanitizeHtml(description.trim(), { allowedTags: [], allowedAttributes: {} }) : '';
 
   try {
     const db = getDb();
@@ -95,14 +98,14 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
     await db.run(
       `INSERT INTO Issue (displayId, title, description, type, status, priority, creatorId, assigneeId, createdAt, updatedAt)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [displayId, title.trim(), description || '', type || 'Task', status || 'To Do', priority || 'Medium', req.userId, assigneeId, nowIso, nowIso]
+      [displayId, safeTitle, safeDescription, type || 'Task', status || 'To Do', priority || 'Medium', req.userId, assigneeId, nowIso, nowIso]
     );
 
     await createNotification(
       req.userId!,
       'assignment',
       'Успешно създадена задача',
-      `Вие успешно създадохте нова задача: ${displayId} - "${title.trim()}"`,
+      `Вие успешно създадохте нова задача: ${displayId} - "${safeTitle}"`,
       displayId
     );
 
@@ -118,7 +121,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<any> 
 
     res.status(201).json({
       id: displayId,
-      title,
+      title: safeTitle,
       type,
       status,
       priority,
@@ -156,10 +159,10 @@ router.post('/favorite', requireAuth, async (req: Request, res: Response): Promi
 
     if (existingFav) {
       await db.run('DELETE FROM UserFavorite WHERE userId = ? AND issueId = ?', [req.userId, issue.id]);
-      return res.json({ success: true, isFavorite: false });
+      return res.status(200).json({ success: true, isFavorite: false });
     } else {
       await db.run('INSERT INTO UserFavorite (userId, issueId) VALUES (?, ?)', [req.userId, issue.id]);
-      return res.json({ success: true, isFavorite: true });
+      return res.status(200).json({ success: true, isFavorite: true });
     }
   } catch (error) {
     console.error('Favorite Toggle Error:', error);

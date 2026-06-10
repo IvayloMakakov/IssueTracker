@@ -37,17 +37,17 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
   const { firstName, lastName, email, password } = req.body;
 
   if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
-    return res.json({ success: false, error: 'Всички полета са задължителни!' });
+    return res.status(400).json({ success: false, error: 'Всички полета са задължителни!' });
   }
 
   const emailErr = validateEmail(email.trim());
   if (emailErr) {
-    return res.json({ success: false, error: emailErr });
+    return res.status(400).json({ success: false, error: emailErr });
   }
 
   const passwordErr = validatePassword(password);
   if (passwordErr) {
-    return res.json({ success: false, error: passwordErr });
+    return res.status(400).json({ success: false, error: passwordErr });
   }
 
   const safeFirstName = sanitizeHtml(firstName.trim(), { allowedTags: [], allowedAttributes: {} });
@@ -58,7 +58,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
     const existingUser = await db.get('SELECT email FROM User WHERE email = ?', [email.toLowerCase().trim()]);
 
     if (existingUser) {
-      return res.json({ success: false, error: 'Потребител с този имейл адрес вече съществува!' });
+      return res.status(409).json({ success: false, error: 'Потребител с този имейл адрес вече съществува!' });
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -79,7 +79,7 @@ router.post('/register', authLimiter, async (req: Request, res: Response): Promi
     });
   } catch (error) {
     console.error('Register Error:', error);
-    res.json({ success: false, error: 'Вътрешна сървърна грешка при регистрация!' });
+    res.status(500).json({ success: false, error: 'Вътрешна сървърна грешка при регистрация!' });
   }
 });
 
@@ -87,7 +87,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
   const { email, password } = req.body;
 
   if (!email?.trim() || !password?.trim()) {
-    return res.json({ success: false, error: 'Моля, въведете имейл адрес и парола!' });
+    return res.status(400).json({ success: false, error: 'Моля, въведете имейл адрес и парола!' });
   }
 
   try {
@@ -95,13 +95,13 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
     const user = await db.get('SELECT * FROM User WHERE email = ?', [email.toLowerCase().trim()]);
 
     if (!user) {
-      return res.json({ success: false, error: 'Не съществува регистриран потребител с този имейл адрес!' });
+      return res.status(401).json({ success: false, error: 'Не съществува регистриран потребител с този имейл адрес!' });
     }
 
     const isMatch = await bcrypt.compare(password, user.passwordHash);
 
     if (!isMatch) {
-      return res.json({ success: false, error: 'Въведената парола е невалидна! Моля, опитайте отново.' });
+      return res.status(401).json({ success: false, error: 'Въведената парола е невалидна! Моля, опитайте отново.' });
     }
 
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
@@ -113,7 +113,7 @@ router.post('/login', authLimiter, async (req: Request, res: Response): Promise<
     });
   } catch (error) {
     console.error('Login Error:', error);
-    res.json({ success: false, error: 'Възникна вътрешна грешка в сървъра при вход!' });
+    res.status(500).json({ success: false, error: 'Възникна вътрешна грешка в сървъра при вход!' });
   }
 });
 

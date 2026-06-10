@@ -60,13 +60,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       const { ok, data } = await register(firstName, lastName, email, password);
       setLoading(false);
 
-      if (!ok || !data) {
-        setError('Нещо се обърка при връзката със сървъра.');
+      if (data?.success === false) {
+        setError(data.error || 'Регистрацията беше неуспешна.');
         return;
       }
 
-      if (data.success === false) {
-        setError(data.error || 'Регистрацията беше неуспешна.');
+      if (!ok || !data) {
+        setError('Нещо се обърка при връзката със сървъра.');
         return;
       }
 
@@ -86,13 +86,13 @@ export default function Login({ onLoginSuccess }: LoginProps) {
       const { ok, data } = await login(email, password);
       setLoading(false);
 
-      if (!ok || !data) {
-        setError('Нещо се обърка при връзката със сървъра.');
+      if (data?.success === false) {
+        setError(data.error || 'Невалиден имейл или парола');
         return;
       }
 
-      if (data.success === false) {
-        setError(data.error || 'Невалиден имейл или парола');
+      if (!ok || !data) {
+        setError('Нещо се обърка при връзката със сървъра.');
         return;
       }
 

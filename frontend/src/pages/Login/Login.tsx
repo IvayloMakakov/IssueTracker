@@ -70,10 +70,17 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         return;
       }
 
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        onLoginSuccess();
+        navigate('/');
+        return;
+      }
+
       alert('Регистрацията е успешна! Моля, влезте в профила си.');
       setMode('login');
       setPassword('');
-      
+
     } else {
       setLoading(true);
       const { ok, data } = await login(email, password);

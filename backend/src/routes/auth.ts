@@ -27,12 +27,21 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
-    await db.run(
+    const normalizedEmail = email.toLowerCase().trim();
+    const result = await db.run(
       'INSERT INTO User (firstName, lastName, email, passwordHash) VALUES (?, ?, ?, ?)',
-      [safeFirstName, safeLastName, email.toLowerCase().trim(), passwordHash]
+      [safeFirstName, safeLastName, normalizedEmail, passwordHash]
     );
 
-    res.status(201).json({ success: true, message: 'Потребителят е регистриран успешно!' });
+    const userId = result.lastID;
+    const token = jwt.sign({ id: userId, email: normalizedEmail }, JWT_SECRET, { expiresIn: '7d' });
+
+    res.status(201).json({
+      success: true,
+      message: 'Потребителят е регистриран успешно!',
+      token,
+      user: { id: userId, firstName: firstName.trim(), lastName: lastName.trim(), email: normalizedEmail }
+    });
   } catch (error) {
     console.error('Register Error:', error);
     res.json({ success: false, error: 'Вътрешна сървърна грешка при регистрация!' });

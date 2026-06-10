@@ -8,11 +8,37 @@ import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PASSWORD_SYMBOL_RE = /[.,!?@#$%^&*()_\-+=\[\]{};:'"\\|<>/~`]/;
+
+function validateEmail(email: string): string | null {
+  if (!EMAIL_RE.test(email)) return 'Моля, въведете валиден имейл адрес!';
+  return null;
+}
+
+function validatePassword(password: string): string | null {
+  if (password.length < 8) return 'Паролата трябва да бъде поне 8 символа дълга!';
+  if (!/[A-Z]/.test(password)) return 'Паролата трябва да съдържа поне една главна буква!';
+  if (!/[a-z]/.test(password)) return 'Паролата трябва да съдържа поне една малка буква!';
+  if (!PASSWORD_SYMBOL_RE.test(password)) return 'Паролата трябва да съдържа поне един специален символ (напр. . , ! ? @)';
+  return null;
+}
+
 router.post('/register', async (req: Request, res: Response): Promise<any> => {
   const { firstName, lastName, email, password } = req.body;
 
   if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
     return res.json({ success: false, error: 'Всички полета са задължителни!' });
+  }
+
+  const emailErr = validateEmail(email.trim());
+  if (emailErr) {
+    return res.json({ success: false, error: emailErr });
+  }
+
+  const passwordErr = validatePassword(password);
+  if (passwordErr) {
+    return res.json({ success: false, error: passwordErr });
   }
 
   const safeFirstName = sanitizeHtml(firstName.trim(), { allowedTags: [], allowedAttributes: {} });

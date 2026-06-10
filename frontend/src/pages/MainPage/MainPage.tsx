@@ -31,10 +31,10 @@ export default function MainPage() {
 
     fetch('/api/me', { headers: { 'Authorization': `Bearer ${token}` } })
       .then(res => {
-        if (res.status === 401) {
+        if (res.status === 401 || res.status === 404) {
           localStorage.removeItem('token');
           navigate('/login');
-          throw new Error('Unauthorized');
+          throw new Error('Invalid session');
         }
         if (!res.ok) throw new Error('Server Error');
         return res.json();

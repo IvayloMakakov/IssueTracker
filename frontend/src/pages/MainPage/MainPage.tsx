@@ -181,7 +181,7 @@ export default function MainPage() {
           <div className="mp-page-header">
             <div>
               <h1 className="mp-page-title">Issues List</h1>
-              <p className="mp-page-subtitle">View and filter live issues connected to Node.js</p>
+              <p className="mp-page-subtitle">View and filter currently live issues </p>
             </div>
             {selectedIssueId && (
               <button onClick={() => setSelectedIssueId(null)} className="mp-clear-search-btn">

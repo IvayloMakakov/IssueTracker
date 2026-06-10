@@ -48,7 +48,7 @@ router.get('/', async (req: Request, res: Response): Promise<any> => {
       };
     });
 
-    res.json(ticket);
+    res.status(200).json(ticket);
   } catch (error) {
     console.error('Get Ticket Error:', error);
     res.status(500).json({ error: 'Грешка при извличане на детайлите на билета' });
@@ -129,7 +129,7 @@ router.patch('/', requireAuth, async (req: Request, res: Response): Promise<any>
       );
     }
 
-    res.json({ success: true, message: `Полето ${field} беше обновено.` });
+    res.status(200).json({ success: true, message: `Полето ${field} беше обновено.` });
   } catch (error) {
     console.error('PATCH ticket error:', error);
     res.status(500).json({ success: false, message: 'Грешка на сървъра' });
@@ -166,7 +166,7 @@ router.post('/comments', requireAuth, async (req: Request, res: Response): Promi
       minute: '2-digit',
     }) + ' ч.';
 
-    res.json({
+    res.status(201).json({
       success: true,
       comment: {
         id: result.lastID,
@@ -221,7 +221,7 @@ router.delete('/', requireAuth, async (req: Request, res: Response): Promise<any
       return res.status(404).json({ error: 'Задачата не е намерена или вече е изтрита' });
     }
 
-    res.json({ success: true, message: 'Задачата е изтрита успешно' });
+    res.status(200).json({ success: true, message: 'Задачата е изтрита успешно' });
   } catch (error) {
     console.error('Delete Ticket Error:', error);
     res.status(500).json({ error: 'Сървърна грешка при изтриване на задачата' });

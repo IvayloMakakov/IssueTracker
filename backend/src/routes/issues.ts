@@ -60,7 +60,7 @@ router.get('/', async (req: Request, res: Response) => {
       };
     });
 
-    res.json(formattedIssues);
+    res.status(200).json(formattedIssues);
   } catch (error) {
     console.error('Get Issues Error:', error);
     res.status(500).json({ error: 'Грешка при извличане на задачите' });
@@ -159,10 +159,10 @@ router.post('/favorite', requireAuth, async (req: Request, res: Response): Promi
 
     if (existingFav) {
       await db.run('DELETE FROM UserFavorite WHERE userId = ? AND issueId = ?', [req.userId, issue.id]);
-      return res.json({ success: true, isFavorite: false });
+      return res.status(200).json({ success: true, isFavorite: false });
     } else {
       await db.run('INSERT INTO UserFavorite (userId, issueId) VALUES (?, ?)', [req.userId, issue.id]);
-      return res.json({ success: true, isFavorite: true });
+      return res.status(200).json({ success: true, isFavorite: true });
     }
   } catch (error) {
     console.error('Favorite Toggle Error:', error);

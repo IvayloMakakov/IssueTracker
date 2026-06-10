@@ -233,7 +233,7 @@ export default function Ticket() {
   }
 
   return (
-    <div className="mp-app-container">
+    <div className="mp-app-container" style={{ height: '100vh', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
       {headerUser && (
         <Header
           currentUser={headerUser}

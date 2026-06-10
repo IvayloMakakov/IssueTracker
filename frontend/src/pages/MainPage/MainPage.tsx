@@ -153,7 +153,11 @@ export default function MainPage() {
     } else if (activeTab === 'created') {
       list = list.filter(issue => Number(issue.creatorId) === Number(currentUser?.id));
     } else if (activeTab === 'recent') {
-      list = list.sort((a, b) => b.id.localeCompare(a.id));
+      list = list.sort((a, b) => {
+        const numA = parseInt(a.id.replace('ISS-', ''), 10);
+        const numB = parseInt(b.id.replace('ISS-', ''), 10);
+        return numB - numA;
+      });
     }
 
     if (activeStatus !== 'All') list = list.filter(i => i.status === activeStatus);

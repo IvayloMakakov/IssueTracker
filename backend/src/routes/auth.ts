@@ -1,12 +1,21 @@
 import { Router, Request, Response } from 'express';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import { getDb } from '../db';
 import { requireAuth } from '../middleware/auth';
 import { JWT_SECRET, SALT_ROUNDS } from '../config';
 import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
+
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, error: 'Твърде много опити. Моля, опитайте отново след малко.' },
+});
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PASSWORD_SYMBOL_RE = /[.,!?@#$%^&*()_\-+=\[\]{};:'"\\|<>/~`]/;
@@ -24,7 +33,7 @@ function validatePassword(password: string): string | null {
   return null;
 }
 
-router.post('/register', async (req: Request, res: Response): Promise<any> => {
+router.post('/register', authLimiter, async (req: Request, res: Response): Promise<any> => {
   const { firstName, lastName, email, password } = req.body;
 
   if (!firstName?.trim() || !lastName?.trim() || !email?.trim() || !password?.trim()) {
@@ -74,7 +83,7 @@ router.post('/register', async (req: Request, res: Response): Promise<any> => {
   }
 });
 
-router.post('/login', async (req: Request, res: Response): Promise<any> => {
+router.post('/login', authLimiter, async (req: Request, res: Response): Promise<any> => {
   const { email, password } = req.body;
 
   if (!email?.trim() || !password?.trim()) {

@@ -6,7 +6,7 @@ import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response): Promise<any> => {
+router.get('/', requireAuth, async (req: Request, res: Response): Promise<any> => {
   const { id } = req.query;
 
   if (!id) {

@@ -1,9 +1,10 @@
 import { Router, Request, Response } from 'express';
 import { getDb } from '../db';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response): Promise<any> => {
+router.get('/', requireAuth, async (req: Request, res: Response): Promise<any> => {
   try {
     const db = getDb();
     const users = await db.all('SELECT id, firstName, lastName FROM User ORDER BY firstName ASC');

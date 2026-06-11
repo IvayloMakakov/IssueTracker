@@ -8,7 +8,7 @@ import sanitizeHtml from 'sanitize-html';
 
 const router = Router();
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', requireAuth, async (req: Request, res: Response) => {
   try {
     const db = getDb();
     const authHeader = req.headers.authorization;

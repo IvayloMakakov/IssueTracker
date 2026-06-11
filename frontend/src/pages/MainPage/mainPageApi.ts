@@ -26,7 +26,12 @@ export interface Notification {
 }
 
 export const fetchUsers = async () => {
-  const response = await fetch('/api/users');
+  const token = localStorage.getItem('token');
+  const response = await fetch('/api/users', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  });
   if (!response.ok) throw new Error('Грешка при взимане на потребителите');
   return response.json(); 
 };

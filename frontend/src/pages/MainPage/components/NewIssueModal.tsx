@@ -25,7 +25,12 @@ export const NewIssueModal: React.FC<NewIssueModalProps> = ({ isOpen, onClose, o
 
   useEffect(() => {
     if (isOpen) {
-      fetch('/api/users')
+      const token = localStorage.getItem('token');
+      fetch('/api/users', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+        }
+      })
         .then((res) => {
           if (!res.ok) throw new Error('Грешка при зареждане на потребителите');
           return res.json();
